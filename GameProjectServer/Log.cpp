@@ -3,10 +3,56 @@
 
 #include "Log.h"
 
-using namespace std;
-
-int main()
+namespace GameProjectServer
 {
-	cout << "Hello CMake." << endl;
-	return 0;
-}
+	Logger::Logger(const std::string& name)
+		: m_name(name)
+	{
+	}
+
+	void Logger::log(LogLevel level, LogEvent::ptr event)
+	{
+		if (level >= m_level)
+		{
+			for(auto& appender : m_appenders)
+			{
+				appender->log(level, event);
+			}
+		}
+	}
+
+	void Logger::debug(LogEvent::ptr event)
+	{
+		log(LogLevel::DEBUG, event);
+	}
+
+	void Logger::info(LogEvent::ptr event)
+	{
+		log(LogLevel::INFO, event);
+	}
+
+	void Logger::warn(LogEvent::ptr event)
+	{
+		log(LogLevel::WARN, event);
+	}
+
+	void Logger::error(LogEvent::ptr event)
+	{
+		log(LogLevel::ERROR, event);
+	}
+
+	void Logger::fatal(LogEvent::ptr event)
+	{
+		log(LogLevel::FATAL, event);
+	}
+
+	void Logger::addAppender(LogAppender::ptr appender)
+	{
+		m_appenders.push_back(appender);
+	}
+	void Logger::delAppender(LogAppender::ptr appender)
+	{
+		m_appenders.remove(appender);
+	}
+
+} // namespace GameProjectServer

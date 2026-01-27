@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <ios>
 #include <memory>
+#include <list>
 
 namespace GameProjectServer
 {
@@ -67,10 +68,21 @@ namespace GameProjectServer
 		Logger(const std::string& name = "root");
 
 		void log(LogLevel level, LogEvent::ptr event);
+
+		void debug(LogEvent::ptr event);
+		void info(LogEvent::ptr event);
+		void warn(LogEvent::ptr event);
+		void error(LogEvent::ptr event);
+		void fatal(LogEvent::ptr event);
+
+		void addAppender(LogAppender::ptr appender);
+		void delAppender(LogAppender::ptr appender);
+		LogLevel getLevel() const { return m_level; }
+		void setLevel(LogLevel level) { m_level = level; }
 	private:
 		std::string m_name;                        //日志器名称
 		LogLevel m_level;                         //日志器级别
-		LogAppender::ptr;
+		std::list<LogAppender::ptr> m_appenders; //日志输出地集合
 	};
 
 	//输出到控制台的日志输出地
