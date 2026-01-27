@@ -2,7 +2,7 @@
 //
 
 #include "Log.h"
-
+#include <iostream>
 namespace GameProjectServer
 {
 	Logger::Logger(const std::string& name)
@@ -53,6 +53,37 @@ namespace GameProjectServer
 	void Logger::delAppender(LogAppender::ptr appender)
 	{
 		m_appenders.remove(appender);
+	}
+
+	FileLogAppender::FileLogAppender(const std::string& filename)
+		: m_filename(filename)
+	{
+	}
+
+	bool FileLogAppender::reopen()
+	{
+		if (m_filestream)
+		{
+			m_filestream.close();
+		}
+		m_filestream.open(m_filename);
+		return !!m_filestream;
+	}
+
+	void FileLogAppender::log(LogLevel level, LogEvent::ptr event)
+	{
+		if (level >= m_level)
+		{
+			m_filestream << m_formatter->format(event);
+		}
+	}
+
+	void StdoutLogAppender::log(LogLevel level, LogEvent::ptr event)
+	{
+		if (level >= m_level)
+		{
+			std::cout << m_formatter->format(event);
+		}
 	}
 
 } // namespace GameProjectServer

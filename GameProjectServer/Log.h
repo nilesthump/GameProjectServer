@@ -4,9 +4,11 @@
 
 #include <string>
 #include <cstdint>
-#include <ios>
 #include <memory>
 #include <list>
+#include <ios>
+#include <sstream>
+#include <fstream>
 
 namespace GameProjectServer
 {
@@ -23,7 +25,7 @@ namespace GameProjectServer
 		uint32_t m_elapse = 0;         //程序启动到现在的毫秒数
 		uint32_t m_threadId = 0;      //线程ID
 		uint32_t m_fiberId = 0;       //协程ID
-		u16streampos m_time;            //时间戳
+		std::u16streampos m_time;            //时间戳
 		std::string m_message;      //日志消息
 	};
 
@@ -54,10 +56,14 @@ namespace GameProjectServer
 		typedef std::shared_ptr<LogAppender> ptr;
 
 		//虚析构函数，确保派生类正确析构
-		virtual ~LogAppender() = 0;
-		void log(LogLevel level, LogEvent::ptr event);
-	private:
+		virtual ~LogAppender() {}
+		virtual void log(LogLevel level, LogEvent::ptr event) = 0;
+
+		void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
+		LogFormatter::ptr getFormatter() const { return m_formatter; }
+	protected:
 		LogLevel m_level;               //日志输出级别
+		LogFormatter::ptr m_formatter; //日志格式化器
 	};
 
 	//日志器
@@ -87,14 +93,26 @@ namespace GameProjectServer
 
 	//输出到控制台的日志输出地
 	class StdoutLogAppender : public LogAppender {
+	public:
+		typedef std::shared_ptr<StdoutLogAppender> ptr;
+		virtual void log(LogLevel level, LogEvent::ptr event) override;
 
+	private:
 
 	};
 
 	//输出到文件的日志输出地
 	class FileLogAppender : public LogAppender {
+	public:
+		typedef std::shared_ptr<FileLogAppender> ptr;
+		FileLogAppender(const std::string& filename);
+		virtual void log(LogLevel level, LogEvent::ptr event) override;
 
-
+		//重新打开文件，文件打开失败返回false
+		bool reopen();
+	private:
+		std::string m_filename;    //日志文件名
+		std::ofstream m_filestream; //文件输出流
 	};
 }
 
