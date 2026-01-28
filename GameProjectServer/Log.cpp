@@ -2,7 +2,11 @@
 //
 
 #include "Log.h"
+#include <tuple>
+#include <sstream>
 #include <iostream>
+#include <cctype>
+
 namespace GameProjectServer
 {
 	Logger::Logger(const std::string& name)
@@ -83,6 +87,73 @@ namespace GameProjectServer
 		if (level >= m_level)
 		{
 			std::cout << m_formatter->format(event);
+		}
+	}
+
+	LogFormatter::LogFormatter(const std::string& pattern)
+		: m_pattern(pattern)
+	{
+		init();
+	}
+
+	std::string LogFormatter::format(LogEvent::ptr event)
+	{
+		std::stringstream ss;
+		for (auto& item : m_items)
+		{
+			item->format(ss, event);
+		}
+		return ss.str();
+	}
+
+	/**********************************
+		important!!!
+		ps:%xxx		%xxx{xxx}	%%转义
+	**********************************/
+	void LogFormatter::init()
+	{
+		/*  string	format	type  */
+		std::vector<std::tuple<std::string, std::string, int>> vec;
+		std::string str;
+		for (size_t i = 0; i < m_pattern.size(); ++i)
+		{
+			if (m_pattern[i] != '%')
+			{
+				str.append(1, m_pattern[i]);
+				continue;
+			}
+			size_t n = i + 1;
+			int fmt_status = 0;
+
+			std::string fmt;
+			std::string str_type;
+			while (n < m_pattern.size())
+			{
+				if (m_pattern[n] == '%')
+				{
+					str.append(1, '%');
+					i = n;
+					break;
+				}
+				else if (isspace(m_pattern[n]))
+				{
+					i = n;
+					break;
+				}
+				if (fmt_status == 0)
+				{
+					if (m_pattern[n] == '{')
+					{
+					}
+				}
+				else if (fmt_status == 1)
+				{
+					if (m_pattern[n] == '}')
+					{
+					}
+				}
+				n++;
+			}
 		}
 	}
 

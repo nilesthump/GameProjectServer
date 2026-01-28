@@ -7,12 +7,13 @@
 #include <memory>
 #include <list>
 #include <ios>
-#include <sstream>
 #include <fstream>
+#include <vector>
+#include <ostream>
 
 namespace GameProjectServer
 {
-
+	
 	//日志事件
 	class LogEvent {
 	public:
@@ -43,9 +44,25 @@ namespace GameProjectServer
 	class LogFormatter {
 	public:
 		typedef std::shared_ptr<LogFormatter> ptr;
-		//为appender提供event信息，返回格式化后的字符串
+		LogFormatter(const std::string& pattern);
+		/***************************************************
+			为appender提供event信息，返回格式化后的字符串
+			%t:时间		%threadid:线程号	%m:消息   
+			%p:日志级别		%n:换行符		%f:文件名
+		***************************************************/
 		std::string format(LogEvent::ptr event);
 	private:
+		class FormatItem {
+		public:
+			typedef std::shared_ptr<FormatItem> ptr;
+			virtual ~FormatItem() {}
+			virtual void format(std::ostream& os, LogEvent::ptr event) = 0;
+		};
+
+		void init();
+	private:
+		std::string m_pattern;                      //日志格式模板
+		std::vector<FormatItem::ptr> m_items; //日志格式化规则集合
 
 	};
 
