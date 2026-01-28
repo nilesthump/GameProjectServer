@@ -109,51 +109,97 @@ namespace GameProjectServer
 	/**********************************
 		important!!!
 		ps:%xxx		%xxx{xxx}	%%转义
+		type: 0:字符串	1:格式化字符串
 	**********************************/
 	void LogFormatter::init()
 	{
-		/*  string	format	type  */
+		/************************************************  
+			string			format		type  
+			读取的字符串	解析格式	类型
+		************************************************/
 		std::vector<std::tuple<std::string, std::string, int>> vec;
-		std::string str;
+		std::string nstr;
 		for (size_t i = 0; i < m_pattern.size(); ++i)
 		{
 			if (m_pattern[i] != '%')
 			{
-				str.append(1, m_pattern[i]);
+				nstr.append(1, m_pattern[i]);
 				continue;
 			}
+			if (i + 1 < m_pattern.size())
+			{
+				if (m_pattern[i + 1] == '%')
+				{
+					nstr.append(1, '%');
+					++i;
+					continue;
+				}
+			}
+
 			size_t n = i + 1;
 			int fmt_status = 0;
+			size_t fmt_begin = 0;
 
 			std::string fmt;
 			std::string str_type;
 			while (n < m_pattern.size())
 			{
-				if (m_pattern[n] == '%')
-				{
-					str.append(1, '%');
-					i = n;
-					break;
-				}
-				else if (isspace(m_pattern[n]))
-				{
-					i = n;
-					break;
-				}
 				if (fmt_status == 0)
 				{
-					if (m_pattern[n] == '{')
+					if (isspace(m_pattern[n]))
 					{
+						i = n;
+						break;
+					}
+					else if (m_pattern[n] == '{')
+					{
+						str_type = m_pattern.substr(i + 1, n - i - 1);
+						fmt_status = 1;
+						fmt_begin = n + 1;
 					}
 				}
 				else if (fmt_status == 1)
 				{
 					if (m_pattern[n] == '}')
 					{
+						fmt = m_pattern.substr(fmt_begin, n - fmt_begin);
+						i = n;
+						break;
 					}
 				}
 				n++;
 			}
+			if (fmt_status == 0)
+			{
+				if (!nstr.empty())
+				{
+					vec.push_back(std::make_tuple(nstr, "", 0));
+					nstr.clear();
+				}
+				str_type = m_pattern.substr(i + 1, n - i - 1);
+				if (!str_type.empty())
+				{
+					vec.push_back(std::make_tuple(str_type, fmt, 1));
+				}
+			}
+			else if (fmt_status == 1)
+			{
+				std::cout << "pattern parse error:" << m_pattern << '-' << m_pattern.substr(i) << std::endl;
+				vec.push_back(std::make_tuple("<<pattern_error>>", fmt, 0));
+			}
+			else if (fmt_status == 2)
+			{
+				if (!nstr.empty())
+				{
+					vec.push_back(std::make_tuple(nstr, "", 0));
+					nstr.clear();
+				}
+				if (!str_type.empty())
+				{
+					vec.push_back(std::make_tuple(str_type, fmt, 1));
+				}
+			}
+
 		}
 	}
 
