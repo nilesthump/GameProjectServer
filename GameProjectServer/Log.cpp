@@ -14,7 +14,23 @@ namespace GameProjectServer
 	{
 	}
 
-	void Logger::log(LogLevel level, LogEvent::ptr event)
+	const char* LogLevel::ToString(Level level) {
+		switch (level) {
+#define XX(name)\
+			case LogLevel::name:\
+				return #name;
+			XX(DEBUG)
+			XX(INFO)
+			XX(WARN)
+			XX(ERROR)
+			XX(FATAL)
+#undef XX
+			default:
+				return "UNKNOW";
+		}
+	}
+
+	void Logger::log(LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
@@ -74,19 +90,19 @@ namespace GameProjectServer
 		return !!m_filestream;
 	}
 
-	void FileLogAppender::log(LogLevel level, LogEvent::ptr event)
+	void FileLogAppender::log(LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
-			m_filestream << m_formatter->format(event);
+			m_filestream << m_formatter->format(level,event);
 		}
 	}
 
-	void StdoutLogAppender::log(LogLevel level, LogEvent::ptr event)
+	void StdoutLogAppender::log(LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
-			std::cout << m_formatter->format(event);
+			std::cout << m_formatter->format(level,event);
 		}
 	}
 
@@ -96,12 +112,12 @@ namespace GameProjectServer
 		init();
 	}
 
-	std::string LogFormatter::format(LogEvent::ptr event)
+	std::string LogFormatter::format(LogLevel::Level level, LogEvent::ptr event)
 	{
 		std::stringstream ss;
 		for (auto& item : m_items)
 		{
-			item->format(ss, event);
+			item->format(ss, level, event);
 		}
 		return ss.str();
 	}
@@ -154,7 +170,7 @@ namespace GameProjectServer
 					else if (m_pattern[n] == '{')
 					{
 						str_type = m_pattern.substr(i + 1, n - i - 1);
-						fmt_status = 1;
+						fmt_status = 1;          //进入格式解析状态
 						fmt_begin = n + 1;
 					}
 				}
@@ -179,7 +195,7 @@ namespace GameProjectServer
 				str_type = m_pattern.substr(i + 1, n - i - 1);
 				if (!str_type.empty())
 				{
-					vec.push_back(std::make_tuple(str_type, fmt, 1));
+					vec.push_back(std::make_tuple(str_type, fmt, 1));           //fmt为空
 				}
 			}
 			else if (fmt_status == 1)
@@ -199,8 +215,40 @@ namespace GameProjectServer
 					vec.push_back(std::make_tuple(str_type, fmt, 1));
 				}
 			}
-
 		}
+		if (!nstr.empty())
+		{
+			vec.push_back(std::make_tuple(nstr, "", 0));
+			nstr.clear();
+		}
+
+		/******************************
+			%m -- 消息体
+			%p -- 日志级别
+			%r -- 累计毫秒数
+			%c -- 日志名称
+			%t -- 线程id
+			%n -- 换行
+			%d -- 时间
+			%f -- 文件名
+			%l -- 行号
+		******************************/
 	}
+
+	class MessageFormatItem : public LogFormatter::FormatItem {
+	public:
+		MessageFormatItem(const std::string& fmt = "") {}
+		void format(std::ostream& os, LogLevel::Level level, LogEvent::ptr event) override {
+			os << event->getContent();
+		}
+	};
+
+	class LevelFormatItem : public LogFormatter::FormatItem {
+	public:
+		LevelFormatItem(const std::string& fmt = "") {}
+		void format(std::ostream& os, LogLevel::Level level, LogEvent::ptr event) override {
+			os << LogLevel::ToString(event->getContent());
+		}
+	};
 
 } // namespace GameProjectServer
