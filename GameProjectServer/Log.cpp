@@ -36,7 +36,7 @@ namespace GameProjectServer
 		{
 			for(auto& appender : m_appenders)
 			{
-				appender->log(level, event);
+				appender->log(this, level, event);
 			}
 		}
 	}
@@ -90,19 +90,19 @@ namespace GameProjectServer
 		return !!m_filestream;
 	}
 
-	void FileLogAppender::log(LogLevel::Level level, LogEvent::ptr event)
+	void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
-			m_filestream << m_formatter->format(level,event);
+			m_filestream << m_formatter->format(logger, level, event);
 		}
 	}
 
-	void StdoutLogAppender::log(LogLevel::Level level, LogEvent::ptr event)
+	void StdoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
-			std::cout << m_formatter->format(level,event);
+			std::cout << m_formatter->format(logger, level, event);
 		}
 	}
 
@@ -112,12 +112,12 @@ namespace GameProjectServer
 		init();
 	}
 
-	std::string LogFormatter::format(LogLevel::Level level, LogEvent::ptr event)
+	std::string LogFormatter::format(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		std::stringstream ss;
 		for (auto& item : m_items)
 		{
-			item->format(ss, level, event);
+			item->format(ss, logger, level, event);
 		}
 		return ss.str();
 	}
@@ -237,17 +237,22 @@ namespace GameProjectServer
 
 	class MessageFormatItem : public LogFormatter::FormatItem {
 	public:
-		MessageFormatItem(const std::string& fmt = "") {}
-		void format(std::ostream& os, LogLevel::Level level, LogEvent::ptr event) override {
-			os << event->getContent();
+		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+			os << event->getMessage();
 		}
 	};
 
 	class LevelFormatItem : public LogFormatter::FormatItem {
 	public:
-		LevelFormatItem(const std::string& fmt = "") {}
-		void format(std::ostream& os, LogLevel::Level level, LogEvent::ptr event) override {
-			os << LogLevel::ToString(event->getContent());
+		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+			os << LogLevel::ToString(level);
+		}
+	};
+
+	class ElapseFormatItem : public LogFormatter::FormatItem {
+	public:
+		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+			os << event->getElapse();
 		}
 	};
 

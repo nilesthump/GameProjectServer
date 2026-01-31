@@ -60,13 +60,13 @@ namespace GameProjectServer
 			%t:时间		%threadid:线程号	%m:消息   
 			%p:日志级别		%n:换行符		%f:文件名
 		***************************************************/
-		std::string format(LogLevel::Level level, LogEvent::ptr event);
+		std::string format(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event);
 	public:
 		class FormatItem {
 		public:
 			typedef std::shared_ptr<FormatItem> ptr;
 			virtual ~FormatItem() {}
-			virtual void format(std::ostream& os, LogLevel::Level level, LogEvent::ptr event) = 0;
+			virtual void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 		};
 
 		void init();
@@ -84,7 +84,7 @@ namespace GameProjectServer
 
 		//虚析构函数，确保派生类正确析构
 		virtual ~LogAppender() {}
-		virtual void log(LogLevel::Level level, LogEvent::ptr event) = 0;
+		virtual void log(Logger::ptr logger,LogLevel::Level level, LogEvent::ptr event) = 0;
 
 		void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
 		LogFormatter::ptr getFormatter() const { return m_formatter; }
@@ -122,7 +122,7 @@ namespace GameProjectServer
 	class StdoutLogAppender : public LogAppender {
 	public:
 		typedef std::shared_ptr<StdoutLogAppender> ptr;
-		virtual void log(LogLevel::Level level, LogEvent::ptr event) override;
+		virtual void log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override;
 
 	private:
 
@@ -133,7 +133,7 @@ namespace GameProjectServer
 	public:
 		typedef std::shared_ptr<FileLogAppender> ptr;
 		FileLogAppender(const std::string& filename);
-		virtual void log(LogLevel::Level level, LogEvent::ptr event) override;
+		virtual void log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override;
 
 		//重新打开文件，文件打开失败返回false
 		bool reopen();
