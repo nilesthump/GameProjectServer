@@ -65,6 +65,7 @@ namespace GameProjectServer
 		class FormatItem {
 		public:
 			typedef std::shared_ptr<FormatItem> ptr;
+			FormatItem(const std::string& fmt = "");
 			virtual ~FormatItem() {}
 			virtual void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 		};
@@ -112,6 +113,8 @@ namespace GameProjectServer
 		void delAppender(LogAppender::ptr appender);
 		LogLevel::Level getLevel() const { return m_level; }
 		void setLevel(LogLevel::Level level) { m_level = level; }
+
+		const std::string& getName() const { return m_name; }
 	private:
 		std::string m_name;                        //日志器名称
 		LogLevel::Level m_level;                         //日志器级别
