@@ -15,7 +15,7 @@ namespace GameProjectServer
 	class MessageFormatItem : public LogFormatter::FormatItem {
 	public:
 		MessageFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getMessage();
 		}
 	};
@@ -23,7 +23,7 @@ namespace GameProjectServer
 	class LevelFormatItem : public LogFormatter::FormatItem {
 	public:
 		LevelFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << LogLevel::ToString(level);
 		}
 	};
@@ -31,7 +31,7 @@ namespace GameProjectServer
 	class ElapseFormatItem : public LogFormatter::FormatItem {
 	public:
 		ElapseFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getElapse();
 		}
 	};
@@ -39,7 +39,7 @@ namespace GameProjectServer
 	class NameFormatItem : public LogFormatter::FormatItem {
 	public:
 		NameFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << logger->getName();
 		}
 	};
@@ -47,7 +47,7 @@ namespace GameProjectServer
 	class ThreadIdFormatItem : public LogFormatter::FormatItem {
 	public:
 		ThreadIdFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getThreadId();
 		}
 	};
@@ -55,7 +55,7 @@ namespace GameProjectServer
 	class FiberIdFormatItem : public LogFormatter::FormatItem {
 	public:
 		FiberIdFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getFiberId();
 		}
 	};
@@ -70,7 +70,7 @@ namespace GameProjectServer
 				m_format = "%Y-%m-%d %H:%M:%S";
 			}
 		}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getTime();
 		}
 	private:
@@ -80,7 +80,7 @@ namespace GameProjectServer
 	class FilenameFormatItem : public LogFormatter::FormatItem {
 	public:
 		FilenameFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getFile();
 		}
 	};
@@ -88,7 +88,7 @@ namespace GameProjectServer
 	class NewLineFormatItem : public LogFormatter::FormatItem {
 	public:
 		NewLineFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << std::endl;
 		}
 	};
@@ -96,7 +96,7 @@ namespace GameProjectServer
 	class LineFormatItem : public LogFormatter::FormatItem {
 	public:
 		LineFormatItem(const std::string& str = "") {}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getLine();
 		}
 	};
@@ -107,7 +107,7 @@ namespace GameProjectServer
 			: m_string(str)
 		{
 		}
-		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << m_string;
 		}
 	private:
@@ -117,6 +117,7 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name)
 	{
+		m_formatter.reset(new LogFormatter("%d	[%p] %f %l %m %n"));            //默认格式
 	}
 
 	const char* LogLevel::ToString(Level level) {
@@ -139,7 +140,7 @@ namespace GameProjectServer
 	{
 		if (level >= m_level)
 		{
-			suto self = shared_from_this();
+			auto self = shared_from_this();
 			for (auto& appender : m_appenders)
 			{
 				appender->log(self, level, event);
@@ -174,6 +175,10 @@ namespace GameProjectServer
 
 	void Logger::addAppender(LogAppender::ptr appender)
 	{
+		if (!appender->getFormatter())
+		{
+			appender->setFormatter(m_formatter);
+		}
 		m_appenders.push_back(appender);
 	}
 	void Logger::delAppender(LogAppender::ptr appender)
@@ -196,7 +201,7 @@ namespace GameProjectServer
 		return !!m_filestream;
 	}
 
-	void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
+	void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
@@ -204,7 +209,7 @@ namespace GameProjectServer
 		}
 	}
 
-	void StdoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
+	void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
@@ -218,7 +223,7 @@ namespace GameProjectServer
 		init();
 	}
 
-	std::string LogFormatter::format(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
+	std::string LogFormatter::format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		std::stringstream ss;
 		for (auto& item : m_items)

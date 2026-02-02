@@ -12,17 +12,18 @@ endif()
 project ("GameProjectServer")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -03 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -03 -g -std=c++11 -Wall")
 
 set(LIB_SRC
-	GameProjectServer/log.cc
+	GameProjectServer/Log.cpp
+	GameProjectServer/Log.h
 	)
 
 add_library(GameProjectServer SHARED ${LIB_SRC})
 #add_library(GameProjectServer_static STATIC ${LIB_SRC})
 #SET_TARGET_PROPERTIES (GameProjectServer_static PROPERTIES OUTPUT_NAME "GameProjectServer")
 
-add_executable(test tests/test.cc)
+add_executable(test tests/test.cpp)
 add_dependencies(test GameProjectServer)
 target_link_libraries(test GameProjectServer)
 

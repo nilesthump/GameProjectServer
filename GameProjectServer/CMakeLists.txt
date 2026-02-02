@@ -3,7 +3,7 @@
 #
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (GameProjectServer "Log.cpp" "Log.h")
+add_executable (GameProjectServer "Log.cpp" "Log.h" "test.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET GameProjectServer PROPERTY CXX_STANDARD 20)
