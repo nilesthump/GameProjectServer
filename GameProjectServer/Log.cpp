@@ -123,7 +123,7 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
-		m_formatter.reset(new LogFormatter("%d	[%p] %f %l %m %n"));            //默认格式
+		m_formatter.reset(new LogFormatter("%d [%p] %f %l %m %n"));            //默认格式
 	}
 
 	const char* LogLevel::ToString(Level level) {
