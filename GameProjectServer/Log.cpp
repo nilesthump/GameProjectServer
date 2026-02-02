@@ -14,6 +14,7 @@ namespace GameProjectServer
 
 	class MessageFormatItem : public LogFormatter::FormatItem {
 	public:
+		MessageFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getMessage();
 		}
@@ -21,6 +22,7 @@ namespace GameProjectServer
 
 	class LevelFormatItem : public LogFormatter::FormatItem {
 	public:
+		LevelFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << LogLevel::ToString(level);
 		}
@@ -28,6 +30,7 @@ namespace GameProjectServer
 
 	class ElapseFormatItem : public LogFormatter::FormatItem {
 	public:
+		ElapseFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getElapse();
 		}
@@ -35,6 +38,7 @@ namespace GameProjectServer
 
 	class NameFormatItem : public LogFormatter::FormatItem {
 	public:
+		NameFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << logger->getName();
 		}
@@ -42,6 +46,7 @@ namespace GameProjectServer
 
 	class ThreadIdFormatItem : public LogFormatter::FormatItem {
 	public:
+		ThreadIdFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getThreadId();
 		}
@@ -49,6 +54,7 @@ namespace GameProjectServer
 
 	class FiberIdFormatItem : public LogFormatter::FormatItem {
 	public:
+		FiberIdFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getFiberId();
 		}
@@ -73,6 +79,7 @@ namespace GameProjectServer
 
 	class FilenameFormatItem : public LogFormatter::FormatItem {
 	public:
+		FilenameFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getFile();
 		}
@@ -80,6 +87,7 @@ namespace GameProjectServer
 
 	class NewLineFormatItem : public LogFormatter::FormatItem {
 	public:
+		NewLineFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << std::endl;
 		}
@@ -87,6 +95,7 @@ namespace GameProjectServer
 
 	class LineFormatItem : public LogFormatter::FormatItem {
 	public:
+		LineFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {
 			os << event->getLine();
 		}
@@ -95,7 +104,7 @@ namespace GameProjectServer
 	class StringFormatItem : public LogFormatter::FormatItem {
 	public:
 		StringFormatItem(const std::string& str)
-			: FormatItem(str), m_string(str)
+			: m_string(str)
 		{
 		}
 		void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override {

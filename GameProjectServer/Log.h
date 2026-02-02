@@ -65,7 +65,6 @@ namespace GameProjectServer
 		class FormatItem {
 		public:
 			typedef std::shared_ptr<FormatItem> ptr;
-			FormatItem(const std::string& fmt = "");
 			virtual ~FormatItem() {}
 			virtual void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 		};
