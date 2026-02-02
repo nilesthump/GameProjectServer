@@ -95,7 +95,7 @@ namespace GameProjectServer
 	};
 
 	//日志器
-	class Logger {
+	class Logger :public std::enable_shared_from_this<Logger> {
 	public:
 		typedef std::shared_ptr<Logger> ptr;
 

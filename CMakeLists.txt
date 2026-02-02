@@ -11,5 +11,23 @@ endif()
 
 project ("GameProjectServer")
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -03 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
+
+set(LIB_SRC
+	GameProjectServer/log.cc
+	)
+
+add_library(GameProjectServer SHARED ${LIB_SRC})
+#add_library(GameProjectServer_static STATIC ${LIB_SRC})
+#SET_TARGET_PROPERTIES (GameProjectServer_static PROPERTIES OUTPUT_NAME "GameProjectServer")
+
+add_executable(test tests/test.cc)
+add_dependencies(test GameProjectServer)
+target_link_libraries(test GameProjectServer)
+
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
 # 包含子项目。
-add_subdirectory ("GameProjectServer")
+#add_subdirectory ("GameProjectServer")

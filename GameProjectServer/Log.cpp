@@ -130,9 +130,10 @@ namespace GameProjectServer
 	{
 		if (level >= m_level)
 		{
+			suto self = shared_from_this();
 			for (auto& appender : m_appenders)
 			{
-				appender->log(this, level, event);
+				appender->log(self, level, event);
 			}
 		}
 	}
