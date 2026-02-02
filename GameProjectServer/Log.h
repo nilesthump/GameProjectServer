@@ -6,6 +6,7 @@
 #include <memory>
 #include <list>
 #include <ios>
+#include <sstream>
 #include <fstream>
 #include <vector>
 #include <ostream>
@@ -18,7 +19,8 @@ namespace GameProjectServer
 	class LogEvent {
 	public:
 		typedef std::shared_ptr<LogEvent> ptr;
-		LogEvent();
+		LogEvent(const char* file, uint32_t line, uint32_t elapse,
+			uint32_t thread_id, uint32_t fiber_id, std::u16streampos time);
 
 		const char* getFile() const { return m_file; }
 		uint32_t getLine() const { return m_line; }
@@ -26,7 +28,8 @@ namespace GameProjectServer
 		uint32_t getThreadId() const { return m_threadId; }
 		uint32_t getFiberId() const { return m_fiberId; }
 		std::u16streampos getTime() const { return m_time; }
-		const std::string& getMessage() const { return m_message; }
+		std::string getMessage() const { return m_ss.str(); }
+		std::stringstream& getSS() { return m_ss; }
 	private:
 		const char* m_file = nullptr;      //日志事件发生的文件
 		uint32_t m_line = 0;           //日志事件发生的行号
@@ -34,7 +37,7 @@ namespace GameProjectServer
 		uint32_t m_threadId = 0;      //线程ID
 		uint32_t m_fiberId = 0;       //协程ID
 		std::u16streampos m_time;            //时间戳
-		std::string m_message;      //日志消息
+		std::stringstream m_ss;
 	};
 
 	//日志级别

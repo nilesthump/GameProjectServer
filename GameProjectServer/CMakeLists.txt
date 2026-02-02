@@ -1,14 +1,33 @@
-ï»¿# CMakeList.txt: GameProjectServer çš„ CMake é¡¹ç›®ï¼Œåœ¨æ­¤å¤„åŒ…æ‹¬æºä»£ç å¹¶å®šä¹‰
-# é¡¹ç›®ç‰¹å®šçš„é€»è¾‘ã€‚
+# CMakeList.txt: GameProjectServer µÄ CMake ÏîÄ¿£¬ÔÚ´Ë´¦°üÀ¨Ô´´úÂë²¢¶¨Òå
+# ÏîÄ¿ÌØ¶¨µÄÂß¼­¡£
 #
 
-# å°†æºä»£ç æ·»åŠ åˆ°æ­¤é¡¹ç›®çš„å¯æ‰§è¡Œæ–‡ä»¶ã€‚
-add_executable (GameProjectServer "Log.cpp" "Log.h" "test.cpp")
+# ½«Ô´´úÂëÌí¼Óµ½´ËÏîÄ¿µÄ¿âÖĞ
+set(LIB_SRC
+    Log.cpp
+    Log.h
+)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET GameProjectServer PROPERTY CXX_STANDARD 20)
-endif()
+# ´´½¨¹²Ïí¿â
+add_library(GameProjectServer SHARED ${LIB_SRC})
 
+# ´´½¨¾²Ì¬¿â
+add_library(GameProjectServer_static STATIC ${LIB_SRC})
+SET_TARGET_PROPERTIES(GameProjectServer_static PROPERTIES OUTPUT_NAME "GameProjectServer")
 
+# ÉèÖÃ°üº¬Ä¿Â¼
+target_include_directories(GameProjectServer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(GameProjectServer_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# TODO: å¦‚æœ‰éœ€è¦ï¼Œè¯·æ·»åŠ æµ‹è¯•å¹¶å®‰è£…ç›®æ ‡ã€‚
+# ÉèÖÃ C++ ±ê×¼
+set_target_properties(GameProjectServer PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
+set_target_properties(GameProjectServer_static PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)

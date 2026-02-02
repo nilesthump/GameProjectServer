@@ -12,23 +12,28 @@ endif()
 project ("GameProjectServer")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -03 -g -std=c++11 -Wall")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(LIB_SRC
-	GameProjectServer/Log.cpp
-	GameProjectServer/Log.h
-	)
+# 设置编译标志
+if(MSVC)
+    # MSVC编译器选项
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+else()
+    # GCC/Clang编译器选项
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -O3 -g -Wall")
+endif()
 
-add_library(GameProjectServer SHARED ${LIB_SRC})
-add_library(GameProjectServer_static STATIC ${LIB_SRC})
-SET_TARGET_PROPERTIES (GameProjectServer_static PROPERTIES OUTPUT_NAME "GameProjectServer_static")
-
-add_executable(test tests/test.cpp)
-add_dependencies(test GameProjectServer)
-target_link_libraries(test GameProjectServer_static)
-
+# 设置输出路径
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-# 包含子项目。
+# 包含子项目
 add_subdirectory ("GameProjectServer")
+
+# 添加测试可执行文件
+add_executable(test tests/test.cpp)
+target_link_libraries(test GameProjectServer)
