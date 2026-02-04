@@ -7,6 +7,7 @@
 #include <cctype>
 #include <functional>
 #include <map>
+#include <ctime>
 
 namespace GameProjectServer
 {
@@ -70,7 +71,12 @@ namespace GameProjectServer
 			}
 		}
 		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
-			os << event->getTime();
+			tm tm_time;
+			time_t t = event->getTime();
+			localtime_s(&tm_time, &t);
+			char buf[64];
+			strftime(buf, sizeof(buf), m_format.c_str(), &tm_time);
+			os << buf;
 		}
 	private:
 		std::string m_format;
