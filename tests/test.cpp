@@ -6,7 +6,7 @@ int main() {
 	logger->addAppender(std::make_shared<GameProjectServer::StdoutLogAppender>());
 
 	GameProjectServer::LogEvent::ptr event = std::make_shared<GameProjectServer::LogEvent>(
-		__FILE__, __LINE__, 100, 12345, 67890, std::u16streampos()
+		__FILE__, __LINE__, 0, 0, 0, std::u16streampos()
 	);
 
 	logger->log(GameProjectServer::LogLevel::DEBUG, event);

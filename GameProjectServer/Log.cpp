@@ -123,7 +123,7 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
-		m_formatter.reset(new LogFormatter("%d [%p] %f %l %m %n"));            //默认格式
+		m_formatter.reset(new LogFormatter("%d %p %f %l %m %n"));            //默认格式
 	}
 
 	const char* LogLevel::ToString(Level level) {
@@ -279,7 +279,7 @@ namespace GameProjectServer
 			{
 				if (fmt_status == 0)
 				{
-					if (isspace(m_pattern[n]))
+					if (!isalpha(m_pattern[n]) && m_pattern[n] != '{')
 					{
 						i = n;
 						break;
@@ -383,6 +383,7 @@ namespace GameProjectServer
 					m_items.push_back(it->second(std::get<1>(i)));
 				}
 			}
+			std::cout << "(" << std::get<0>(i) << "," << std::get<1>(i) << "," << std::get<2>(i) << ")" << std::endl;
 		}
 
 	}
