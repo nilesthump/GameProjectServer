@@ -2,6 +2,12 @@
 # 项目特定的逻辑。
 #
 
+# 如果支持，请为 MSVC 编译器启用热重载。
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
+
 # 将源代码添加到此项目的库中
 set(LIB_SRC
     Log.cpp
@@ -31,3 +37,17 @@ set_target_properties(GameProjectServer_static PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
+
+# 为共享库启用热重载支持
+if(MSVC)
+    # 为调试配置启用编辑并继续
+    target_compile_options(GameProjectServer PRIVATE
+        $<$<CONFIG:Debug>:/ZI>
+        $<$<CONFIG:RelWithDebInfo>:/ZI>
+    )
+    # 设置链接选项以支持热重载
+    target_link_options(GameProjectServer PRIVATE
+        $<$<CONFIG:Debug>:/INCREMENTAL>
+        $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL>
+    )
+endif()
