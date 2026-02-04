@@ -1,4 +1,4 @@
-﻿// Log.h: 日志系统头文件
+// Log.h: 日志系统头文件
 #pragma once
 
 #include <string>

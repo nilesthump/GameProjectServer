@@ -1,4 +1,4 @@
-﻿// GameProjectServer.cpp: 定义应用程序的入口点。
+// GameProjectServer.cpp: 定义应用程序的入口点。
 //
 
 #include "Log.h"
@@ -123,7 +123,7 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
-		m_formatter.reset(new LogFormatter("%d %p %f %l %m %n"));            //默认格式
+		m_formatter.reset(new LogFormatter("%d [%p] %f %l %m %n"));            //默认格式
 	}
 
 	const char* LogLevel::ToString(Level level) {
@@ -281,7 +281,6 @@ namespace GameProjectServer
 				{
 					if (!isalpha(m_pattern[n]) && m_pattern[n] != '{')
 					{
-						i = n;
 						break;
 					}
 					else if (m_pattern[n] == '{')
@@ -314,6 +313,7 @@ namespace GameProjectServer
 				{
 					vec.push_back(std::make_tuple(str_type, fmt, 1));           //fmt为空
 				}
+				i = n;
 			}
 			else if (fmt_status == 1)
 			{
