@@ -313,7 +313,7 @@ namespace GameProjectServer
 				{
 					vec.push_back(std::make_tuple(str_type, fmt, 1));           //fmt为空
 				}
-				i = n;
+				i = n - 1;
 			}
 			else if (fmt_status == 1)
 			{
