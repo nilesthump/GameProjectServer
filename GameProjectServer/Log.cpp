@@ -129,7 +129,7 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
-		m_formatter.reset(new LogFormatter("Time: %d Level: [%p] Filename: %f Line: %l Message: %m #%n"));            //默认格式
+		m_formatter.reset(new LogFormatter("Time: %d{%H:%M:%S %Y-%m-%d} Level: [%p] Filename: %f Line: %l Message: %m #%n"));            //默认格式
 	}
 
 	const char* LogLevel::ToString(Level level) {
@@ -301,6 +301,7 @@ namespace GameProjectServer
 					if (m_pattern[n] == '}')
 					{
 						fmt = m_pattern.substr(fmt_begin, n - fmt_begin);
+						fmt_status = 2;		  //格式解析完成
 						i = n;
 						break;
 					}
