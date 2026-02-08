@@ -1,4 +1,6 @@
 #include <iostream>
+#include <thread>
+#include "Util.h"
 #include "Log.h"
 
 int main() {
@@ -6,7 +8,7 @@ int main() {
 	logger->addAppender(std::make_shared<GameProjectServer::StdoutLogAppender>());
 
 	GameProjectServer::LogEvent::ptr event = std::make_shared<GameProjectServer::LogEvent>(
-		__FILE__, __LINE__, 12345, 678, 90, time(0)
+		__FILE__, __LINE__, 12345, std::hash<std::thread::id>{}(std::this_thread::get_id()), 90, time(0)
 	);
 	event->getSS() << "This is a test log message.";
 	logger->log(GameProjectServer::LogLevel::DEBUG, event);
