@@ -4,12 +4,12 @@ namespace GameProjectServer
 {
 
 #ifndef __Linux__
-	DWORD getThreadId()
+	uint32_t GetThreadId()
 	{
 		return GetCurrentThreadId();
 	}
 #else
-	pid_t getThreadId()
+	pid_t GetThreadId()
 	{
 		return syscall(SYS_gettid);
 	}

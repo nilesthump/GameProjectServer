@@ -16,15 +16,44 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# 平台检测
+if(WIN32)
+    set(PLATFORM_WINDOWS TRUE)
+    set(PLATFORM_LINUX FALSE)
+elseif(UNIX AND NOT APPLE)
+    set(PLATFORM_WINDOWS FALSE)
+    set(PLATFORM_LINUX TRUE)
+elseif(APPLE)
+    set(PLATFORM_WINDOWS FALSE)
+    set(PLATFORM_LINUX FALSE)
+    set(PLATFORM_MACOS TRUE)
+endif()
+
 # 设置编译标志
 if(MSVC)
     # MSVC编译器选项
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
-else()
+    # Windows平台定义
+    add_definitions(-DPLATFORM_WINDOWS)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # GCC/Clang编译器选项
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -O3 -g -Wall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -O3 -g -Wall -fPIC")
+    if(PLATFORM_LINUX)
+        # Linux平台定义
+        add_definitions(-DPLATFORM_LINUX)
+        # 链接pthread库
+        set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+        set(CMAKE_HAVE_THREADS_LIBRARY 1)
+        set(CMAKE_USE_WIN32_THREADS_INIT 0)
+        set(CMAKE_USE_PTHREADS_INIT 1)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+    endif()
+elseif(APPLE)
+    # macOS平台定义
+    add_definitions(-DPLATFORM_MACOS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -O3 -g -Wall -fPIC")
 endif()
 
 # 设置输出路径
@@ -37,3 +66,9 @@ add_subdirectory ("GameProjectServer")
 # 添加测试可执行文件
 add_executable(test tests/test.cpp)
 target_link_libraries(test GameProjectServer)
+
+# Linux平台需要链接pthread库
+if(PLATFORM_LINUX)
+    find_package(Threads REQUIRED)
+    target_link_libraries(test Threads::Threads)
+endif()
