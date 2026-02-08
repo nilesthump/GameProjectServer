@@ -53,7 +53,7 @@ namespace GameProjectServer
 		};
 		static const char* ToString(Level level);
 	};
-
+	
 	//日志格式化器
 	class LogFormatter {
 	public:

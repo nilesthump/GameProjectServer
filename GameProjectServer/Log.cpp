@@ -119,6 +119,14 @@ namespace GameProjectServer
 		std::string m_string;
 	};
 
+	class TabFormatItem : public LogFormatter::FormatItem {
+		public:
+		TabFormatItem(const std::string& str = "") {}
+		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
+			os << "\t";
+		}
+	};
+
 	LogEvent::LogEvent(const char* file, uint32_t line, uint32_t elapse,
 		uint32_t thread_id, uint32_t fiber_id, std::u16streampos time)
 		: m_file(file), m_line(line), m_elapse(elapse),
@@ -129,7 +137,7 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
-		m_formatter.reset(new LogFormatter("Time: %d{%H:%M:%S %Y-%m-%d} Level: [%p] Filename: %f Line: %l Message: %m #%n"));            //默认格式
+		m_formatter.reset(new LogFormatter("%d{%H:%M:%S %Y-%m-%d}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n"));            //默认格式
 	}
 
 	const char* LogLevel::ToString(Level level) {
@@ -138,10 +146,10 @@ namespace GameProjectServer
 			case LogLevel::name:\
 				return #name;
 			XX(DEBUG)
-				XX(INFO)
-				XX(WARN)
-				XX(ERROR)
-				XX(FATAL)
+			XX(INFO)
+			XX(WARN)
+			XX(ERROR)
+			XX(FATAL)
 #undef XX
 			default:
 				return "UNKNOW";
@@ -368,7 +376,9 @@ namespace GameProjectServer
 			XX(n, NewLineFormatItem),
 			XX(d, DateTimeFormatItem),
 			XX(f, FilenameFormatItem),
-			XX(l, LineFormatItem)
+			XX(l, LineFormatItem),
+			XX(T, TabFormatItem),
+			XX(F, FiberIdFormatItem)
 #undef XX
 		};
 
