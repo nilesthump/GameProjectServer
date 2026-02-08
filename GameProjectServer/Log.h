@@ -10,6 +10,9 @@
 #include <fstream>
 #include <vector>
 #include <ostream>
+#ifdef ERROR
+#undef ERROR
+#endif
 
 namespace GameProjectServer
 {

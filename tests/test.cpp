@@ -1,7 +1,7 @@
 #include <iostream>
-#include <thread>
 #include "Util.h"
 #include "Log.h"
+
 
 int main() {
 	GameProjectServer::Logger::ptr logger = std::make_shared<GameProjectServer::Logger>("test_logger");

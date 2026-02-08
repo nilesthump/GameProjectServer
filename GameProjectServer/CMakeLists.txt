@@ -53,10 +53,3 @@ if(MSVC)
         $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL>
     )
 endif()
-
-# Linux平台需要链接pthread库
-if(UNIX AND NOT APPLE)
-    find_package(Threads REQUIRED)
-    target_link_libraries(GameProjectServer Threads::Threads)
-    target_link_libraries(GameProjectServer_static Threads::Threads)
-endif()
