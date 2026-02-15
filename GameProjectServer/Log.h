@@ -212,7 +212,7 @@ namespace GameProjectServer
 	private:
 		std::map<std::string, Logger::ptr> m_loggers; //日志器集合
 		Logger::ptr m_root; //根日志器
-	}
+	};
 
 	typedef GameProjectServer::SingletonPtr<LoggerManager> LoggerMgr;
 }
