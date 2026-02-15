@@ -83,7 +83,7 @@ namespace GameProjectServer
 		std::stringstream& getSS() { return m_event->getSS(); }
 	private:
 		LogEvent::ptr m_event;
-	}
+	};
 
 	//日志格式化器
 	class LogFormatter {
