@@ -62,6 +62,7 @@ namespace GameProjectServer
 		std::stringstream& getSS() { return m_ss; }
 		std::shared_ptr<Logger> getLogger() const { return m_logger; }
 		LogLevel::Level getLevel() const { return m_level; }
+		void format(const char* fmt, ...);
 	private:
 		const char* m_file = nullptr;      //日志事件发生的文件
 		uint32_t m_line = 0;           //日志事件发生的行号
