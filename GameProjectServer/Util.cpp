@@ -6,4 +6,13 @@ namespace GameProjectServer
 	{
 		return GetCurrentThreadId();
 	}
+
+	uint32_t GetFiberId()
+	{
+#ifdef USE_FIBER
+		return GetCurrentFiber();
+#else
+		return 0;
+#endif
+	}
 }

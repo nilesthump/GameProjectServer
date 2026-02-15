@@ -14,34 +14,21 @@
 #undef ERROR
 #endif
 
+#define NILESTHUMP_LOG_LEVEL(logger, level) \
+	if(logger->getLevel() <= level) \
+		GameProjectServer::LogEventWrap(GameProjectServer::LogEvent::ptr(\
+		new LogEvent(logger, level, __FILE__, __LINE__, 0,\
+		GameProjectServer::GetThreadId(), GameProjectServer::GetFiberId(), time(0)))).getSS()
+
+#define NILESTHUMP_LOG_DEBUG(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::DEBUG)
+#define NILESTHUMP_LOG_INFO(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::INFO)
+#define NILESTHUMP_LOG_WARN(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::WARN)
+#define NILESTHUMP_LOG_ERROR(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::ERROR)
+#define NILESTHUMP_LOG_FATAL(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::FATAL)
+
 namespace GameProjectServer
 {
 	class Logger;
-
-	//日志事件
-	class LogEvent {
-	public:
-		typedef std::shared_ptr<LogEvent> ptr;
-		LogEvent(const char* file, uint32_t line, uint32_t elapse,
-			uint32_t thread_id, uint32_t fiber_id, std::u16streampos time);
-
-		const char* getFile() const { return m_file; }
-		uint32_t getLine() const { return m_line; }
-		uint32_t getElapse() const { return m_elapse; }
-		uint32_t getThreadId() const { return m_threadId; }
-		uint32_t getFiberId() const { return m_fiberId; }
-		std::u16streampos getTime() const { return m_time; }
-		std::string getMessage() const { return m_ss.str(); }
-		std::stringstream& getSS() { return m_ss; }
-	private:
-		const char* m_file = nullptr;      //日志事件发生的文件
-		uint32_t m_line = 0;           //日志事件发生的行号
-		uint32_t m_elapse = 0;         //程序启动到现在的毫秒数
-		uint32_t m_threadId = 0;      //线程ID
-		uint32_t m_fiberId = 0;       //协程ID
-		std::u16streampos m_time;            //时间戳
-		std::stringstream m_ss;
-	};
 
 	//日志级别
 	class LogLevel {
@@ -56,7 +43,48 @@ namespace GameProjectServer
 		};
 		static const char* ToString(Level level);
 	};
-	
+
+	//日志事件
+	class LogEvent {
+	public:
+		typedef std::shared_ptr<LogEvent> ptr;
+		LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, 
+			const char* file, uint32_t line, uint32_t elapse,
+			uint32_t thread_id, uint32_t fiber_id, std::u16streampos time);
+
+		const char* getFile() const { return m_file; }
+		uint32_t getLine() const { return m_line; }
+		uint32_t getElapse() const { return m_elapse; }
+		uint32_t getThreadId() const { return m_threadId; }
+		uint32_t getFiberId() const { return m_fiberId; }
+		std::u16streampos getTime() const { return m_time; }
+		std::string getMessage() const { return m_ss.str(); }
+		std::stringstream& getSS() { return m_ss; }
+		std::shared_ptr<Logger> getLogger() const { return m_logger; }
+		LogLevel::Level getLevel() const { return m_level; }
+	private:
+		const char* m_file = nullptr;      //日志事件发生的文件
+		uint32_t m_line = 0;           //日志事件发生的行号
+		uint32_t m_elapse = 0;         //程序启动到现在的毫秒数
+		uint32_t m_threadId = 0;      //线程ID
+		uint32_t m_fiberId = 0;       //协程ID
+		std::u16streampos m_time;            //时间戳
+		std::stringstream m_ss;
+
+		std::shared_ptr<Logger> m_logger;
+		LogLevel::Level m_level;
+	};
+
+	class LogEventWrap {
+	public:
+		LogEventWrap(LogEvent::ptr e);
+		~LogEventWrap();
+		LogEvent::ptr getEvent() const { return m_event; }
+		std::stringstream& getSS() { return m_event->getSS(); }
+	private:
+		LogEvent::ptr m_event;
+	}
+
 	//日志格式化器
 	class LogFormatter {
 	public:
