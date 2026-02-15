@@ -14,6 +14,7 @@ set(LIB_SRC
     Log.h
     Util.cpp
     Util.h
+    Singleton.h
 )
 
 # ´´½¨¹²Ïí¿â

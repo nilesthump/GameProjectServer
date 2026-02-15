@@ -13,6 +13,7 @@
 #include <cstdarg>
 #include <map>
 #include "Util.h"
+#include "Singleton.h"
 #ifdef _WINDOWS_
 #undef ERROR
 #endif
@@ -212,6 +213,8 @@ namespace GameProjectServer
 		std::map<std::string, Logger::ptr> m_loggers; //日志器集合
 		Logger::ptr m_root; //根日志器
 	}
+
+	typedef GameProjectServer::SingletonPtr<LoggerManager> LoggerMgr;
 }
 
 // TODO: 在此处引用程序需要的其他标头。

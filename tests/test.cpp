@@ -19,6 +19,9 @@ int main() {
 
 	NILESTHUMP_LOG_FMT_ERROR(logger, "Formatted log message: %d, %s", 42, "hello");
 
+	auto l = GameProjectServer::LoggerMgr::GetInstance()->getLogger("xx");
+	NILESTHUMP_LOG_INFO(l) << "test macro log message xx";
+
 	std::cout << "Log event logged successfully." << std::endl;
 	return 0;
 }
