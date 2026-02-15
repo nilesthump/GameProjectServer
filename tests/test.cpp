@@ -1,7 +1,7 @@
+#define NILESTHUMP_RETURN_ROOT
 #include <iostream>
 #include "Util.h"
 #include "Log.h"
-
 
 int main() {
 	GameProjectServer::Logger::ptr logger = std::make_shared<GameProjectServer::Logger>("test_logger");
@@ -12,8 +12,12 @@ int main() {
 	);*/
 	//event->getSS() << "This is a test log message.";
 	//logger->log(GameProjectServer::LogLevel::DEBUG, event);
-
+	GameProjectServer::FileLogAppender::ptr file_appender = std::make_shared<GameProjectServer::FileLogAppender>("test_log.txt");
+	file_appender->setLevel(GameProjectServer::LogLevel::ERROR);
+	logger->addAppender(file_appender);
 	NILESTHUMP_LOG_INFO(logger) << "test macro log message";
+
+	NILESTHUMP_LOG_FMT_ERROR(logger, "Formatted log message: %d, %s", 42, "hello");
 
 	std::cout << "Log event logged successfully." << std::endl;
 	return 0;

@@ -10,8 +10,15 @@
 #include <fstream>
 #include <vector>
 #include <ostream>
+#include <cstdarg>
+#include <map>
+#include "Util.h"
 #ifdef _WINDOWS_
 #undef ERROR
+#endif
+
+#ifdef NILESTHUMP_RETURN_ROOT
+#define __NILESTHUMP_RETURN_ROOT__
 #endif
 
 #define NILESTHUMP_LOG_LEVEL(logger, level) \
@@ -25,6 +32,18 @@
 #define NILESTHUMP_LOG_WARN(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::WARN)
 #define NILESTHUMP_LOG_ERROR(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::ERROR)
 #define NILESTHUMP_LOG_FATAL(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::FATAL)
+
+#define NILESTHUMP_LOG_FMT_LEVEL(logger, level, fmt, ...) \
+	if(logger->getLevel() <= level) \
+		GameProjectServer::LogEventWrap(GameProjectServer::LogEvent::ptr(\
+		new GameProjectServer::LogEvent(logger, level, __FILE__, __LINE__, 0,\
+		GameProjectServer::GetThreadId(), GameProjectServer::GetFiberId(), time(0)))).getEvent()->format(fmt, ##__VA_ARGS__)
+
+#define NILESTHUMP_LOG_FMT_DEBUG(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::DEBUG, fmt, ##__VA_ARGS__)
+#define NILESTHUMP_LOG_FMT_INFO(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::INFO, fmt, ##__VA_ARGS__)
+#define NILESTHUMP_LOG_FMT_WARN(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::WARN, fmt, ##__VA_ARGS__)
+#define NILESTHUMP_LOG_FMT_ERROR(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::ERROR, fmt, ##__VA_ARGS__)
+#define NILESTHUMP_LOG_FMT_FATAL(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::FATAL, fmt, ##__VA_ARGS__)
 
 namespace GameProjectServer
 {
@@ -63,6 +82,7 @@ namespace GameProjectServer
 		std::shared_ptr<Logger> getLogger() const { return m_logger; }
 		LogLevel::Level getLevel() const { return m_level; }
 		void format(const char* fmt, ...);
+		void format(const char* fmt, va_list al);
 	private:
 		const char* m_file = nullptr;      //日志事件发生的文件
 		uint32_t m_line = 0;           //日志事件发生的行号
@@ -121,7 +141,8 @@ namespace GameProjectServer
 		//虚析构函数，确保派生类正确析构
 		virtual ~LogAppender() {}
 		virtual void log(std::shared_ptr<Logger> logger,LogLevel::Level level, LogEvent::ptr event) = 0;
-
+		void setLevel(LogLevel::Level level) { m_level = level; }
+		LogLevel::Level getLevel() const { return m_level; }
 		void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
 		LogFormatter::ptr getFormatter() const { return m_formatter; }
 	protected:
@@ -180,6 +201,17 @@ namespace GameProjectServer
 		std::string m_filename;    //日志文件名
 		std::ofstream m_filestream; //文件输出流
 	};
+
+	class LoggerManager {
+	public:
+		typedef std::shared_ptr<LoggerManager> ptr;
+		LoggerManager();
+		Logger::ptr getLogger(const std::string& name);
+		void init();
+	private:
+		std::map<std::string, Logger::ptr> m_loggers; //日志器集合
+		Logger::ptr m_root; //根日志器
+	}
 }
 
 // TODO: 在此处引用程序需要的其他标头。

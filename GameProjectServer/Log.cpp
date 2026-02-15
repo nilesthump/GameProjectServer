@@ -6,8 +6,8 @@
 #include <iostream>
 #include <cctype>
 #include <functional>
-#include <map>
 #include <ctime>
+#include <cstdio>
 
 namespace GameProjectServer
 {
@@ -135,6 +135,44 @@ namespace GameProjectServer
 	{
 	}
 
+	void LogEvent::format(const char* fmt, ...)
+	{
+		va_list al;
+		va_start(al, fmt);
+		format(fmt, al);
+		va_end(al);
+	}
+
+	void LogEvent::format(const char* fmt, va_list al)
+	{
+		char* buf = nullptr;
+
+		auto vasprintf = [&fmt, &al](char** str)->int 
+			{
+			va_list args;
+			va_copy(args, al);
+			int len = vsnprintf(nullptr, 0, fmt, args);
+			va_end(args);
+			if (len < 0)
+			{
+				return -1;
+			}
+			*str = new char[len + 1];
+			if (*str == nullptr)
+			{
+				return -1;
+			}
+			return vsnprintf(*str, len + 1, fmt, al);
+			};
+
+		int len = vasprintf(&buf);
+		if (len != -1)
+		{
+			m_ss << std::string(buf, len);
+			free(buf);
+		}
+	}
+
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
@@ -220,6 +258,7 @@ namespace GameProjectServer
 	FileLogAppender::FileLogAppender(const std::string& filename)
 		: m_filename(filename)
 	{
+		reopen();
 	}
 
 	bool FileLogAppender::reopen()
@@ -415,6 +454,28 @@ namespace GameProjectServer
 
 	}
 
+	LoggerManager::LoggerManager()
+	{
+		m_root.reset(new Logger);
+		m_root->addAppender(std::make_shared<StdoutLogAppender>());
+		m_loggers[m_root->getName()] = m_root;
+	}
 
+	Logger::ptr LoggerManager::getLogger(const std::string& name)
+	{
+		auto it = m_loggers.find(name);
+#ifdef __NILESTHUMP_RETURN_ROOT__
+		return it == m_loggers.end() ? m_root : it->second;
+#else
+		if (it != m_loggers.end())
+		{
+			return it->second;
+		}
+		Logger::ptr logger(new Logger(name));
+		logger->addAppender(LogAppender::ptr(new StdoutLogAppender));
+		m_loggers[name] = logger;
+		return logger;
+#endif
+	}
 
 } // namespace GameProjectServer
