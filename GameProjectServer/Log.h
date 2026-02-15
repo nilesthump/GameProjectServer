@@ -17,7 +17,7 @@
 #define NILESTHUMP_LOG_LEVEL(logger, level) \
 	if(logger->getLevel() <= level) \
 		GameProjectServer::LogEventWrap(GameProjectServer::LogEvent::ptr(\
-		new LogEvent(logger, level, __FILE__, __LINE__, 0,\
+		new GameProjectServer::LogEvent(logger, level, __FILE__, __LINE__, 0,\
 		GameProjectServer::GetThreadId(), GameProjectServer::GetFiberId(), time(0)))).getSS()
 
 #define NILESTHUMP_LOG_DEBUG(logger) NILESTHUMP_LOG_LEVEL(logger, GameProjectServer::LogLevel::DEBUG)
