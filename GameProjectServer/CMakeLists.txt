@@ -15,6 +15,7 @@ set(LIB_SRC
     Util.cpp
     Util.h
     Singleton.h
+    Config.h
 )
 
 # ´´½¨¹²Ïí¿â
