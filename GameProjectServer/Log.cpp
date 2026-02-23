@@ -464,7 +464,7 @@ namespace GameProjectServer
 	Logger::ptr LoggerManager::getLogger(const std::string& name)
 	{
 		auto it = m_loggers.find(name);
-#ifdef __NILESTHUMP_RETURN_ROOT__
+#ifdef NILESTHUMP_RETURN_ROOT
 		return it == m_loggers.end() ? m_root : it->second;
 #else
 		if (it != m_loggers.end())

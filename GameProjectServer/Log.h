@@ -18,8 +18,8 @@
 #undef ERROR
 #endif
 
-#ifdef NILESTHUMP_RETURN_ROOT
-#define __NILESTHUMP_RETURN_ROOT__
+#ifdef __NILESTHUMP_RETURN_ROOT__
+#define NILESTHUMP_RETURN_ROOT
 #endif
 
 #define NILESTHUMP_LOG_LEVEL(logger, level) \
@@ -45,6 +45,8 @@
 #define NILESTHUMP_LOG_FMT_WARN(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::WARN, fmt, ##__VA_ARGS__)
 #define NILESTHUMP_LOG_FMT_ERROR(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::ERROR, fmt, ##__VA_ARGS__)
 #define NILESTHUMP_LOG_FMT_FATAL(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::FATAL, fmt, ##__VA_ARGS__)
+
+#define NILESTHUMP_LOG_ROOT() GameProjectServer::LoggerMgr::GetInstance()->getRoot()
 
 namespace GameProjectServer
 {
@@ -208,7 +210,9 @@ namespace GameProjectServer
 		typedef std::shared_ptr<LoggerManager> ptr;
 		LoggerManager();
 		Logger::ptr getLogger(const std::string& name);
-		void init();
+
+		void init() = delete;		//暂时弃用init函数，直接在构造函数中初始化根日志器
+		Logger::ptr getRoot() const { return m_root; }
 	private:
 		std::map<std::string, Logger::ptr> m_loggers; //日志器集合
 		Logger::ptr m_root; //根日志器
