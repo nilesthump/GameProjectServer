@@ -25,8 +25,8 @@ namespace GameProjectServer
 		std::string getName() const { return m_name; }
 		std::string getDescription() const { return m_description; }
 
-		virtual std::string toString() = 0;			//½«ÅäÖÃÏî×ª»»Îª×Ö·û´®
-		virtual bool fromString(const std::string& val) = 0;		//½âÎö×Ö·û´®£¬¸üĞÂÅäÖÃÏîµÄÖµ
+		virtual std::string toString() = 0;			//å°†é…ç½®é¡¹è½¬æ¢ä¸ºå­—ç¬¦ä¸²
+		virtual bool fromString(const std::string& val) = 0;		//è§£æå­—ç¬¦ä¸²ï¼Œæ›´æ–°é…ç½®é¡¹çš„å€¼
 	protected:
 		std::string m_name;
 		std::string m_description;
@@ -81,11 +81,11 @@ namespace GameProjectServer
 		typedef std::map<std::string, ConfigVarBase::ptr> ConfigVarMap;
 		
 		/******************************************
-			ÓÃÓÚ²éÕÒ»ò´´½¨Ò»¸öÅäÖÃÏî£¬
-			Èç¹ûÅäÖÃÏî´æÔÚ£¬
-			·µ»ØÒÑ´æÔÚµÄÅäÖÃÏî£»
-			Èç¹ûÅäÖÃÏî²»´æÔÚ£¬
-			¸ù¾İÄ¬ÈÏÖµ´´½¨Ò»¸öĞÂµÄÅäÖÃÏî²¢·µ»Ø
+			ç”¨äºæŸ¥æ‰¾æˆ–åˆ›å»ºä¸€ä¸ªé…ç½®é¡¹ï¼Œ
+			å¦‚æœé…ç½®é¡¹å­˜åœ¨ï¼Œ
+			è¿”å›å·²å­˜åœ¨çš„é…ç½®é¡¹ï¼›
+			å¦‚æœé…ç½®é¡¹ä¸å­˜åœ¨ï¼Œ
+			æ ¹æ®é»˜è®¤å€¼åˆ›å»ºä¸€ä¸ªæ–°çš„é…ç½®é¡¹å¹¶è¿”å›
 		******************************************/
 		template<class T>
 		static typename ConfigVar<T>::ptr Lookup(const std::string& name, 
@@ -110,9 +110,9 @@ namespace GameProjectServer
 		}
 
 		/********************************************
-			¸ù¾İÃû³Æ²éÕÒÅäÖÃÏî£¬·µ»ØÅäÖÃÏîÖ¸Õë£¬
-			Èç¹ûÃ»ÓĞÕÒµ½·µ»Ønullptr
-			×¢Òâ£º´Ëº¯Êı²»»á´´½¨ÅäÖÃÏî
+			æ ¹æ®åç§°æŸ¥æ‰¾é…ç½®é¡¹ï¼Œè¿”å›é…ç½®é¡¹æŒ‡é’ˆï¼Œ
+			å¦‚æœæ²¡æœ‰æ‰¾åˆ°è¿”å›nullptr
+			æ³¨æ„ï¼šæ­¤å‡½æ•°ä¸ä¼šåˆ›å»ºé…ç½®é¡¹
 		********************************************/
 		template<class T>
 		static typename ConfigVar<T>::ptr Lookup(const std::string& name)
