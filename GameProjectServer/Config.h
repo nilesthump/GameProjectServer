@@ -70,6 +70,7 @@ namespace GameProjectServer
 			return false;
 		}
 		const T getValue() const { return m_val; }
+		void setValue(const T& v) { m_val = v; }
 	private:
 		T m_val;
 	};

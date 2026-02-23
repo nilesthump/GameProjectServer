@@ -15,6 +15,7 @@ set(LIB_SRC
     Util.cpp
     Util.h
     Singleton.h
+    Config.cpp
     Config.h
 )
 

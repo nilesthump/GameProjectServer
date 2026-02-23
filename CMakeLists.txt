@@ -37,3 +37,7 @@ add_subdirectory ("GameProjectServer")
 # 添加测试可执行文件
 add_executable(test tests/test.cpp)
 target_link_libraries(test GameProjectServer)
+
+# 添加测试配置可执行文件
+add_executable(test_config tests/test_config.cpp)
+target_link_libraries(test_config GameProjectServer)
