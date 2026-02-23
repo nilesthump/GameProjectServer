@@ -1,6 +1,6 @@
 #include "Config.h"
 #include "Log.h"
-
+GameProjectServer::Config::ConfigVarMap GameProjectServer::Config::s_datas;
 GameProjectServer::ConfigVar<int>::ptr g_int_value_config =
 	GameProjectServer::Config::Lookup("system.port", (int)8080, "system port");
 
