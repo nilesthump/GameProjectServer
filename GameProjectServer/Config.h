@@ -5,7 +5,7 @@
 #include <exception>
 #include <map>
 #include <sstream>
-#include <regex>
+#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include "Log.h"
 
@@ -98,8 +98,8 @@ namespace GameProjectServer
 				NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "Lookup name=" << name << " exists";
 				return tmp;
 			}
-			std::regex pattern("^[a-zA-Z0-9\\._]+$");
-			if (!std::regex_match(name, pattern))
+			boost::regex pattern("^[a-zA-Z0-9\\._]+$");
+			if (!boost::regex_match(name, pattern))
 			{
 				NILESTHUMP_LOG_ERROR(NILESTHUMP_LOG_ROOT()) << "Lookup name invalid " << name;
 				throw std::invalid_argument(name);
