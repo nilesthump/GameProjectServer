@@ -32,7 +32,7 @@ target_include_directories(GameProjectServer_static PUBLIC ${CMAKE_CURRENT_SOURC
 
 # …Ë÷√ C++ ±Í◊º
 set_target_properties(GameProjectServer PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )

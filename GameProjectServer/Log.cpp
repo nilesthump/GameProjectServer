@@ -165,8 +165,7 @@ namespace GameProjectServer
 			return vsnprintf(*str, len + 1, fmt, al);
 			};
 
-		int len = vasprintf(&buf);
-		if (len != -1)
+		if (int len = vasprintf(&buf); len != -1)
 		{
 			m_ss << std::string(buf, len);
 			free(buf);
@@ -440,8 +439,7 @@ namespace GameProjectServer
 			}
 			else
 			{
-				auto it = s_format_items.find(std::get<0>(i));
-				if (it == s_format_items.end())
+				if (auto it = s_format_items.find(std::get<0>(i)); it == s_format_items.end())
 				{
 					m_items.push_back(FormatItem::ptr(std::make_shared<StringFormatItem>("<<error_format %" + std::get<0>(i) + ">>")));
 				}
