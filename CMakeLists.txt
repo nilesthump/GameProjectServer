@@ -14,10 +14,18 @@ project (GameProjectServer)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG yaml-cpp-0.9.0 # 可以根据需要选择特定版本
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
 # 设置 Boost 库的路径,请根据实际安装路径进行修改
 set(Boost_ROOT "D:/boost_1_90_0")
 set(Boost_LIB_DIR ${Boost_ROOT}/lib32-msvc-14.3)
-
 find_package(Boost 1.90 REQUIRED)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
