@@ -3,7 +3,14 @@
 #include <memory>
 #include <string>
 #include <exception>
+
 #include <map>
+#include <vector>
+#include <set>
+#include <list>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <sstream>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
@@ -57,6 +64,8 @@ namespace GameProjectServer
 	};
 
 	//STL偏特化
+
+	//string - vector
 	template<class T>
 	class LexicalCast<std::string, std::vector<T>>
 	{
@@ -86,6 +95,193 @@ namespace GameProjectServer
 			for (auto& i : v)
 			{
 				node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
+	//string - list
+	template<class T>
+	class LexicalCast<std::string, std::list<T>>
+	{
+	public:
+		std::list<T> operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			typename std::list<T> lst;
+			std::stringstream ss;
+			for (size_t i = 0; i < node.size(); ++i)
+			{
+				ss.str("");
+				ss << node[i];
+				lst.push_back(LexicalCast<std::string, T>()(ss.str()));
+			}
+			return lst;
+		}
+	};
+
+	template<class T>
+	class LexicalCast<std::list<T>, std::string>
+	{
+	public:
+		std::string operator()(const std::list<T>& v) noexcept
+		{
+			YAML::Node node;
+			for (auto& i : v)
+			{
+				node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
+	//string - set
+	template<class T>
+	class LexicalCast<std::string, std::set<T>>
+	{
+	public:
+		std::set<T> operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			typename std::set<T> st;
+			std::stringstream ss;
+			for (size_t i = 0; i < node.size(); ++i)
+			{
+				ss.str("");
+				ss << node[i];
+				st.insert(LexicalCast<std::string, T>()(ss.str()));
+			}
+			return st;
+		}
+	};
+
+	template<class T>
+	class LexicalCast<std::set<T>, std::string>
+	{
+	public:
+		std::string operator()(const std::set<T>& v) noexcept
+		{
+			YAML::Node node;
+			for (auto& i : v)
+			{
+				node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
+	//string - unordered_set
+	template<class T>
+	class LexicalCast<std::string, std::unordered_set<T>>
+	{
+	public:
+		std::unordered_set<T> operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			typename std::unordered_set<T> un_st;
+			std::stringstream ss;
+			for (size_t i = 0; i < node.size(); ++i)
+			{
+				ss.str("");
+				ss << node[i];
+				un_st.insert(LexicalCast<std::string, T>()(ss.str()));
+			}
+			return un_st;
+		}
+	};
+
+	template<class T>
+	class LexicalCast<std::unordered_set<T>, std::string>
+	{
+	public:
+		std::string operator()(const std::unordered_set<T>& v) noexcept
+		{
+			YAML::Node node;
+			for (auto& i : v)
+			{
+				node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
+	//string - map
+	template<class T>
+	class LexicalCast<std::string, std::map<std::string, T>>
+	{
+	public:
+		std::map<std::string, T> operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			typename std::map<std::string, T> mp;
+			std::stringstream ss;
+			for (auto it = node.begin(); it != node.end(); ++it)
+			{
+				ss.str("");
+				ss << it->second;
+				mp.insert(std::make_pair(it->first.Scalar(),
+					LexicalCast<std::string, T>()(ss.str())));
+			}
+			return mp;
+		}
+	};
+
+	template<class T>
+	class LexicalCast<std::map<std::string, T>, std::string>
+	{
+	public:
+		std::string operator()(const std::map<std::string, T>& v) noexcept
+		{
+			YAML::Node node;
+			for (auto& i : v)
+			{
+				node[i.first] = YAML::Load(LexicalCast<T, std::string>()(i.second));
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
+	//string - unordered_map
+	template<class T>
+	class LexicalCast<std::string, std::unordered_map<std::string, T>>
+	{
+	public:
+		std::unordered_map<std::string, T> operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			typename std::unordered_map<std::string, T> un_mp;
+			std::stringstream ss;
+			for (auto it = node.begin(); it != node.end(); ++it)
+			{
+				ss.str("");
+				ss << it->second;
+				un_mp.insert(std::make_pair(it->first.Scalar(),
+					LexicalCast<std::string, T>()(ss.str())));
+			}
+			return un_mp;
+		}
+	};
+
+	template<class T>
+	class LexicalCast<std::unordered_map<std::string, T>, std::string>
+	{
+	public:
+		std::string operator()(const std::unordered_map<std::string, T>& v) noexcept
+		{
+			YAML::Node node;
+			for (auto& i : v)
+			{
+				node[i.first] = YAML::Load(LexicalCast<T, std::string>()(i.second));
 			}
 			std::stringstream ss;
 			ss << node;
