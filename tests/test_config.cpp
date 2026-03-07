@@ -5,6 +5,12 @@
 GameProjectServer::ConfigVar<int>::ptr g_int_value_config =
 GameProjectServer::Config::Lookup("system.port", (int)8080, "system port");
 
+GameProjectServer::ConfigVar<float>::ptr g_float_value_config =
+GameProjectServer::Config::Lookup("system.value", (float)10.2f, "system value");
+
+GameProjectServer::ConfigVar<std::vector<int>>::ptr g_int_vector_config =
+GameProjectServer::Config::Lookup("system.int_vec", std::vector<int>{1, 2}, "system int vector");
+
 void print_yaml(YAML::Node& node, int level)
 {
 	if (node.IsScalar())
@@ -54,18 +60,29 @@ void test_yaml()
 void test_config()
 {
 	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before; " << g_int_value_config->getValue();
-	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before: " << g_int_value_config->toString();
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before: " << g_float_value_config->toString();
+	auto v = g_int_vector_config->getValue();
+	for (auto& i : v)
+	{
+		NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before int_vec: " << i;
+	}
 
 	YAML::Node root = YAML::LoadFile("H:/GameProjectServer/bin/conf/test.yml");
 	GameProjectServer::Config::LoadFromYaml(root);
 
 	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after: " << g_int_value_config->getValue();
-	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after: " << g_int_value_config->toString();
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after: " << g_float_value_config->toString();
+
+	v = g_int_vector_config->getValue();
+	for (auto& i : v)
+	{
+		NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after int_vec: " << i;
+	}
 }
 
 int main(int argc, char** argv)
 {
 	test_config();
-	test_yaml();
+	//test_yaml();
 	return 0;
 }

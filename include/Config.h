@@ -45,7 +45,58 @@ namespace GameProjectServer
 		std::string m_description;
 	};
 
+	//F from_type, T to_type
+	template<class F, class T>
+	class LexicalCast
+	{
+	public:
+		T operator()(const F& v)
+		{
+			return boost::lexical_cast<T>(v);
+		}
+	};
+
+	//STL偏特化
 	template<class T>
+	class LexicalCast<std::string, std::vector<T>>
+	{
+	public:
+		std::vector<T> operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			typename std::vector<T> vec;
+			std::stringstream ss;
+			for (size_t i = 0; i < node.size(); ++i)
+			{
+				ss.str("");
+				ss << node[i];
+				vec.push_back(LexicalCast<std::string, T>()(ss.str()));
+			}
+			return vec;
+		}
+	};
+
+	template<class T>
+	class LexicalCast<std::vector<T>, std::string>
+	{
+	public:
+		std::string operator()(const std::vector<T>& v) noexcept
+		{
+			YAML::Node node;
+			for (auto& i : v)
+			{
+				node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
+	//FromStr T operator()(const std::string& str)
+	//ToStr std::string operator()(const T& v)
+	template<class T, class FromStr = LexicalCast<std::string, T> 
+	, class ToStr = LexicalCast<T, std::string>>
 	class ConfigVar : public ConfigVarBase
 	{
 	public:
@@ -59,7 +110,8 @@ namespace GameProjectServer
 		{
 			try
 			{
-				return boost::lexical_cast<std::string>(m_val);
+				//return boost::lexical_cast<std::string>(m_val);
+				return ToStr()(m_val);
 			}
 			catch (std::exception& e)
 			{
@@ -72,7 +124,8 @@ namespace GameProjectServer
 		{
 			try
 			{
-				m_val = boost::lexical_cast<T>(val);
+				//m_val = boost::lexical_cast<T>(val);
+				setValue(FromStr()(val));
 				return true;
 			}
 			catch (std::exception& e)
@@ -111,7 +164,7 @@ namespace GameProjectServer
 				NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "Lookup name=" << name << " exists";
 				return tmp;
 			}
-			boost::regex pattern("^[a-zA-Z0-9\\._]+$");
+			boost::regex pattern("^[a-zA-Z0-9\\._]*$");
 			if (!boost::regex_match(name, pattern))
 			{
 				NILESTHUMP_LOG_ERROR(NILESTHUMP_LOG_ROOT()) << "Lookup name invalid " << name;
