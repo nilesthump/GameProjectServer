@@ -18,6 +18,18 @@
 #undef ERROR
 #endif
 
+#ifdef _MSC_VER
+#ifdef NST_LIB_EXPORTS
+#define LOG_API __declspec(dllexport)
+#else
+#define LOG_API __declspec(dllimport)
+#endif
+#elif define(__GNUC__)
+#define LOG_API __attribute__((visibility("default")))
+#else
+#define LOG_API
+#endif
+
 #ifdef __NILESTHUMP_RETURN_ROOT__
 #define NILESTHUMP_RETURN_ROOT
 #endif

@@ -27,6 +27,7 @@ if(WIN32)
 endif()
 
 # ´´½¨¹²Ïí¿â
+add_definitions(-DNST_LIB_EXPORTS)
 add_library(GameProjectServer SHARED ${LIB_SRC})
 target_include_directories(GameProjectServer PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(GameProjectServer PUBLIC ${Boost_LIBRARIES} Boost::boost yaml-cpp::yaml-cpp)

@@ -3,23 +3,26 @@
 #include "yaml-cpp/yaml.h"
 
 GameProjectServer::ConfigVar<int>::ptr g_int_value_config =
-	GameProjectServer::Config::Lookup("system.port", (int)8080, "system port");
+GameProjectServer::Config::Lookup("system.port", (int)8080, "system port");
 
-void print_yaml(YAML::Node& node,int level)
+void print_yaml(YAML::Node& node, int level)
 {
 	if (node.IsScalar())
 	{
-		NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << node.Scalar() << " - " << node.Tag() << " - " << level;
+		NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << std::string(level * 4, ' ') <<
+			node.Scalar() << " - " << node.Type() << " - " << level;
 	}
 	else if (node.IsNull())
 	{
-		NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "NULL - " << node.Tag() << " - " << level;
+		NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << std::string(level * 4, ' ') <<
+			"NULL - " << node.Type() << " - " << level;
 	}
 	else if (node.IsMap())
 	{
 		for (auto it : node)
 		{
-			NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << it.first.Scalar() << " - " << it.first.Tag() << " - " << level;
+			NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << std::string(level * 4, ' ') <<
+				it.first.Scalar() << " - " << it.first.Type() << " - " << level;
 			print_yaml(it.second, level + 1);
 		}
 	}
@@ -27,7 +30,8 @@ void print_yaml(YAML::Node& node,int level)
 	{
 		for (size_t i = 0; i < node.size(); ++i)
 		{
-			NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << i << " - " << node[i].Tag() << " - " << level;
+			NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << std::string(level * 4, ' ') <<
+				i << " - " << node[i].Type() << " - " << level;
 			print_yaml(node[i], level + 1);
 		}
 	}
@@ -47,11 +51,21 @@ void test_yaml()
 	}
 }
 
-int main(int argc, char** argv)
+void test_config()
 {
-	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before: " << g_int_value_config->getValue();
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before; " << g_int_value_config->getValue();
 	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before: " << g_int_value_config->toString();
 
+	YAML::Node root = YAML::LoadFile("H:/GameProjectServer/bin/conf/test.yml");
+	GameProjectServer::Config::LoadFromYaml(root);
+
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after: " << g_int_value_config->getValue();
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after: " << g_int_value_config->toString();
+}
+
+int main(int argc, char** argv)
+{
+	test_config();
 	test_yaml();
 	return 0;
 }
