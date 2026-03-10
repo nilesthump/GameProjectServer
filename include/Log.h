@@ -81,7 +81,7 @@ namespace GameProjectServer
 	//日志事件
 	class LogEvent {
 	public:
-		typedef std::shared_ptr<LogEvent> ptr;
+		using ptr = std::shared_ptr<LogEvent>;
 		LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, 
 			const char* file, uint32_t line, uint32_t elapse,
 			uint32_t thread_id, uint32_t fiber_id, std::u16streampos time);
@@ -124,7 +124,7 @@ namespace GameProjectServer
 	//日志格式化器
 	class LogFormatter {
 	public:
-		typedef std::shared_ptr<LogFormatter> ptr;
+		using ptr = std::shared_ptr<LogFormatter>;
 		LogFormatter(const std::string& pattern);
 		/***************************************************
 			为appender提供event信息，返回格式化后的字符串
@@ -135,7 +135,7 @@ namespace GameProjectServer
 	public:
 		class FormatItem {
 		public:
-			typedef std::shared_ptr<FormatItem> ptr;
+			using ptr = std::shared_ptr<FormatItem>;
 			virtual ~FormatItem() {}
 			virtual void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 		};
@@ -151,7 +151,7 @@ namespace GameProjectServer
 	//日志输出地
 	class LogAppender {
 	public:
-		typedef std::shared_ptr<LogAppender> ptr;
+		using ptr = std::shared_ptr<LogAppender>;
 
 		//虚析构函数，确保派生类正确析构
 		virtual ~LogAppender() {}
@@ -168,7 +168,7 @@ namespace GameProjectServer
 	//日志器
 	class Logger :public std::enable_shared_from_this<Logger> {
 	public:
-		typedef std::shared_ptr<Logger> ptr;
+		using ptr = std::shared_ptr<Logger>;
 
 		Logger(const std::string& name = "root");
 
@@ -196,7 +196,7 @@ namespace GameProjectServer
 	//输出到控制台的日志输出地
 	class StdoutLogAppender : public LogAppender {
 	public:
-		typedef std::shared_ptr<StdoutLogAppender> ptr;
+		using ptr = std::shared_ptr<StdoutLogAppender>;
 		virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
 
 	private:
@@ -206,7 +206,7 @@ namespace GameProjectServer
 	//输出到文件的日志输出地
 	class FileLogAppender : public LogAppender {
 	public:
-		typedef std::shared_ptr<FileLogAppender> ptr;
+		using ptr = std::shared_ptr<FileLogAppender>;
 		FileLogAppender(const std::string& filename);
 		virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
 
@@ -219,7 +219,7 @@ namespace GameProjectServer
 
 	class LoggerManager {
 	public:
-		typedef std::shared_ptr<LoggerManager> ptr;
+		using ptr = std::shared_ptr<LoggerManager>;
 		LoggerManager();
 		Logger::ptr getLogger(const std::string& name);
 
@@ -230,7 +230,7 @@ namespace GameProjectServer
 		Logger::ptr m_root; //根日志器
 	};
 
-	typedef GameProjectServer::SingletonPtr<LoggerManager> LoggerMgr;
+	using LoggerMgr = GameProjectServer::SingletonPtr<LoggerManager>;
 }
 
 // TODO: 在此处引用程序需要的其他标头。

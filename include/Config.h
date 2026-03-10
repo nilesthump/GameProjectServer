@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <exception>
+#include <functional>
 
 #include <map>
 #include <vector>
@@ -34,7 +35,7 @@ namespace GameProjectServer
 	class ConfigVarBase
 	{
 	public:
-		typedef std::shared_ptr<ConfigVarBase> ptr;
+		using ptr = std::shared_ptr<ConfigVarBase>;
 		ConfigVarBase(const std::string& name, const std::string& description = "")
 			: m_name(name)
 			, m_description(description)
@@ -47,6 +48,7 @@ namespace GameProjectServer
 
 		virtual std::string toString() = 0;			//将配置项转换为字符串
 		virtual bool fromString(const std::string& val) = 0;		//解析字符串，更新配置项的值
+		virtual std::string getTypeName() const = 0;	//获取配置项类型的名称
 	protected:
 		std::string m_name;
 		std::string m_description;
@@ -296,7 +298,9 @@ namespace GameProjectServer
 	class ConfigVar : public ConfigVarBase
 	{
 	public:
-		typedef std::shared_ptr<ConfigVar> ptr;
+		using ptr = std::shared_ptr<ConfigVar>;
+		using on_change_cb = std::function<void(const T& old_value, const T& new_value)>;
+
 		ConfigVar(const std::string& name, const T& default_value, const std::string& description = "")
 			: ConfigVarBase(name, description)
 			, m_val(default_value)
@@ -332,15 +336,57 @@ namespace GameProjectServer
 			return false;
 		}
 		const T getValue() const { return m_val; }
-		void setValue(const T& v) { m_val = v; }
+		void setValue(const T& v) 
+		{
+			if (v == m_val)
+			{
+				return;
+			}
+			for (auto& i : m_cbs)
+			{
+				i.second(m_val, v);
+			}
+			m_val = v;
+		}
+		std::string getTypeName() const override { return typeid(T).name(); }
+
+		void addListener(uint64_t key, on_change_cb cb) noexcept
+		{
+			if (m_cbs.find(key) != m_cbs.end())
+			{
+				NILESTHUMP_LOG_ERROR(NILESTHUMP_LOG_ROOT()) <<
+					"ConfigVar::addListener failed, key=" << key << " already exists";
+				return;
+			}
+			m_cbs[key] = cb;
+		}
+
+		void delListener(uint64_t key) noexcept
+		{
+			m_cbs.erase(key);
+		}
+
+		on_change_cb getListener(uint64_t key) noexcept
+		{
+			auto it = m_cbs.find(key);
+			return it == m_cbs.end() ? nullptr : it->second;
+		}
+
+		void clearListener() noexcept
+		{
+			m_cbs.clear();
+		}
 	private:
 		T m_val;
+		//变更回调函数组，当配置项变更时，调用回调函数通知外部
+		// uint64_t key, 要求唯一，一般用hash
+		std::map<uint64_t, on_change_cb> m_cbs;
 	};
 
 	class CONFIG_API Config
 	{
 	public:
-		typedef std::map<std::string, ConfigVarBase::ptr> ConfigVarMap;
+		using ConfigVarMap = std::map<std::string, ConfigVarBase::ptr>;
 
 		/******************************************
 			用于查找或创建一个配置项，
@@ -354,6 +400,23 @@ namespace GameProjectServer
 			const T& default_value,
 			const std::string& description = "")
 		{
+			auto it = s_datas.find(name);
+			if (it != s_datas.end())
+			{
+				auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+				if (tmp) 
+				{
+					NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "Lookup name=" << name << " exists";
+					return tmp;
+				}
+				else
+				{
+					NILESTHUMP_LOG_ERROR(NILESTHUMP_LOG_ROOT()) << "Lookup name=" << name <<
+						" exists but type not " << typeid(T).name() <<
+						" real_type=" << it->second->getTypeName() << " " << it->second->toString();
+					return nullptr;
+				}
+			}
 			auto tmp = Lookup<T>(name);
 			if (tmp != nullptr)
 			{

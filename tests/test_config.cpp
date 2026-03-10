@@ -119,9 +119,83 @@ void test_config()
 #undef XX
 }
 
+class Person
+{
+public:
+	std::string m_name = "";
+	int m_age = 0;
+	bool m_sex = 0;
+
+	std::string toString() const
+	{
+		std::stringstream ss;
+		ss << "[Person name=" << m_name
+			<< " age=" << m_age
+			<< " sex=" << m_sex
+			<< "]";
+		return ss.str();
+	}
+	bool operator==(const Person& p) const
+	{
+		return m_name == p.m_name
+			&& m_age == p.m_age
+			&& m_sex == p.m_sex;
+	}
+};
+
+namespace GameProjectServer
+{
+	template<>
+	class LexicalCast<std::string, Person>
+	{
+	public:
+		Person operator()(const std::string& v) noexcept
+		{
+			YAML::Node node = YAML::Load(v);
+			Person p;
+			p.m_name = node["name"].as<std::string>();
+			p.m_age = node["age"].as<int>();
+			p.m_sex = node["sex"].as<bool>();
+			return p;
+		}
+	};
+
+	template<>
+	class LexicalCast<Person, std::string>
+	{
+	public:
+		std::string operator()(const Person& p) noexcept
+		{
+			YAML::Node node;
+			node["name"] = p.m_name;
+			node["age"] = p.m_age;
+			node["sex"] = p.m_sex;
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+}
+
+GameProjectServer::ConfigVar<Person>::ptr g_person_config =
+GameProjectServer::Config::Lookup("class.person", Person(), "system person");
+
+void test_class()
+{
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before:" <<
+		g_person_config->getValue().toString() << " - " << g_person_config->toString();
+
+	YAML::Node root = YAML::LoadFile("H:/GameProjectServer/bin/conf/test.yml");
+	GameProjectServer::Config::LoadFromYaml(root);
+
+	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "after:" <<
+		g_person_config->getValue().toString() << " - " << g_person_config->toString();
+}
+
 int main(int argc, char** argv)
 {
-	test_config();
+	test_class();
+	//test_config();
 	//test_yaml();
 	return 0;
 }
