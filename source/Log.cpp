@@ -2,6 +2,7 @@
 //
 
 #include "Log.h"
+#include "Config.h"
 #include <tuple>
 #include <iostream>
 #include <cctype>
@@ -40,7 +41,7 @@ namespace GameProjectServer
 	public:
 		NameFormatItem(const std::string& str = "") {}
 		void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
-			os << logger->getName();
+			os << event->getLogger()->getName();
 		}
 	};
 
@@ -175,11 +176,54 @@ namespace GameProjectServer
 	Logger::Logger(const std::string& name)
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
-		m_formatter.reset(new LogFormatter("%d{%H:%M:%S %Y-%m-%d}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n"));            //默认格式
+		m_formatter.reset(new LogFormatter("%d{%H:%M:%S %Y-%m-%d}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n")); //默认格式
+	
+		if (name == "root")
+		{
+			m_appenders.push_back(std::make_shared<StdoutLogAppender>());
+		}
+	}
+
+	void Logger::setFormatter(LogFormatter::ptr formatter)
+	{
+		m_formatter = formatter;
+	}
+
+	void Logger::setFormatter(const std::string& pattern)
+	{
+		LogFormatter::ptr new_formatter(new LogFormatter(pattern));
+		if (new_formatter->isError())
+		{
+			std::cout << "Logger setFormatter name=" << m_name
+				<< " value=" << pattern << " invalid formatter" << std::endl;
+			return;
+		}
+		m_formatter = new_formatter;
+	}
+
+	LogFormatter::ptr Logger::getFormatter() const
+	{
+		return m_formatter;
+	}
+
+	LogLevel::Level LogLevel::FromString(const std::string& str) 
+	{
+#define XX(level) \
+		if (str == #level) {\
+			return LogLevel::level;\
+		}
+		XX(DEBUG)
+		XX(INFO)
+		XX(WARN)
+		XX(ERROR)
+		XX(FATAL)
+#undef XX
+		return LogLevel::UNKNOW;
 	}
 
 	const char* LogLevel::ToString(Level level) {
-		switch (level) {
+		switch (level) 
+		{
 #define XX(name)\
 			case LogLevel::name:\
 				return #name;
@@ -209,9 +253,16 @@ namespace GameProjectServer
 		if (level >= m_level)
 		{
 			auto self = shared_from_this();
-			for (auto& appender : m_appenders)
+			if (!m_appenders.empty())
 			{
-				appender->log(self, level, event);
+				for (auto& appender : m_appenders)
+				{
+					appender->log(self, level, event);
+				}
+			}
+			else if (m_root)
+			{
+				m_root->log(level, event);
 			}
 		}
 	}
@@ -249,9 +300,15 @@ namespace GameProjectServer
 		}
 		m_appenders.push_back(appender);
 	}
+
 	void Logger::delAppender(LogAppender::ptr appender)
 	{
 		m_appenders.remove(appender);
+	}
+
+	void Logger::clearAppenders()
+	{
+		m_appenders.clear();
 	}
 
 	FileLogAppender::FileLogAppender(const std::string& filename)
@@ -382,6 +439,7 @@ namespace GameProjectServer
 			else if (fmt_status == 1)
 			{
 				std::cout << "pattern parse error:" << m_pattern << '-' << m_pattern.substr(i) << std::endl;
+				m_error = true;
 				vec.push_back(std::make_tuple("<<pattern_error>>", fmt, 0));
 			}
 			else if (fmt_status == 2)
@@ -442,6 +500,7 @@ namespace GameProjectServer
 				if (auto it = s_format_items.find(std::get<0>(i)); it == s_format_items.end())
 				{
 					m_items.push_back(FormatItem::ptr(std::make_shared<StringFormatItem>("<<error_format %" + std::get<0>(i) + ">>")));
+					m_error = true;
 				}
 				else
 				{
@@ -456,24 +515,207 @@ namespace GameProjectServer
 	{
 		m_root.reset(new Logger);
 		m_root->addAppender(std::make_shared<StdoutLogAppender>());
-		m_loggers[m_root->getName()] = m_root;
+		
+		init();
 	}
 
 	Logger::ptr LoggerManager::getLogger(const std::string& name)
 	{
 		auto it = m_loggers.find(name);
-#ifdef NILESTHUMP_RETURN_ROOT
-		return it == m_loggers.end() ? m_root : it->second;
-#else
 		if (it != m_loggers.end())
 		{
 			return it->second;
 		}
 		Logger::ptr logger(new Logger(name));
-		logger->addAppender(LogAppender::ptr(new StdoutLogAppender));
+		logger->m_root = m_root;
 		m_loggers[name] = logger;
 		return logger;
-#endif
+	}
+
+	struct LogAppenderDefine
+	{
+		int type = 0;                            //1 File 2 Stdout
+		LogLevel::Level level = LogLevel::UNKNOW;                           //日志级别
+		std::string formatter;                  //日志格式
+		std::string file;                       //当type = 1时，file为必须项
+
+		bool operator==(const LogAppenderDefine& oth) const
+		{
+			return type == oth.type
+				&& level == oth.level
+				&& formatter == oth.formatter
+				&& file == oth.file;
+		}
+	};
+
+	struct LogDefine
+	{
+		std::string name;                            //日志器名称
+		LogLevel::Level level = LogLevel::UNKNOW;                         //日志器级别
+		std::string formatter;                      //日志格式器
+		std::vector<LogAppenderDefine> appenders; //日志输出地集合
+
+		bool operator==(const LogDefine& oth) const
+		{
+			return name == oth.name
+				&& level == oth.level
+				&& formatter == oth.formatter
+				&& appenders == oth.appenders;
+		}
+
+		bool operator<(const LogDefine& oth) const
+		{
+			return name < oth.name;
+		}
+	};
+
+	template<>
+	class LexicalCast<std::string, LogDefine>
+	{
+	public:
+		LogDefine operator()(const std::string& v)
+		{
+			YAML::Node node = YAML::Load(v);
+			if (!node["name"].IsDefined())
+			{
+				throw std::invalid_argument("log config must have name");
+				//NILESTHUMP_LOG_ERROR(NILESTHUMP_LOG_ROOT()) << "log config must have name";
+			}
+			LogDefine ld;
+			ld.name = node["name"].as<std::string>();
+			ld.level = LogLevel::FromString(node["level"].IsDefined() ?
+				node["level"].as<std::string>() : "");
+			ld.formatter = node["formatter"].IsDefined() ? node["formatter"].as<std::string>() : "";
+			if (node["appenders"].IsDefined())
+			{
+				for (size_t i = 0; i < node["appenders"].size(); ++i)
+				{
+					auto a = node["appenders"][i];
+					if (!a["type"].IsDefined())
+					{
+						std::cout << "log appender config error: type is required" << std::endl;
+						continue;
+					}
+					std::string type = a["type"].as<std::string>();
+					LogAppenderDefine lad;
+					if (type == "FileLogAppender")
+					{
+						lad.type = 1;
+						if (!a["file"].IsDefined())
+						{
+							std::cout << "log appender config error: file is required for FileLogAppender" << std::endl;
+							continue;
+						}
+						lad.file = a["file"].as<std::string>();
+						if (a["formatter"].IsDefined())
+						{
+							lad.formatter = a["formatter"].as<std::string>();
+						}
+					}
+					else if (type == "StdoutLogAppender")
+					{
+						lad.type = 2;
+					}
+					else
+					{
+						std::cout << "log appender config error: type is invalid" << std::endl;
+						continue;
+					}
+
+					ld.appenders.push_back(lad);
+				}
+			}
+			return ld;
+		}
+	};
+
+	ConfigVar<std::set<LogDefine>>::ptr g_log_defines =
+		Config::Lookup("logs", std::set<LogDefine>(), "logs config");
+
+	struct LogIniter 
+	{
+		LogIniter()
+		{
+			g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value,
+				const std::set<LogDefine>& new_value) {
+					NILESTHUMP_LOG_GET_LOGGER(NILESTHUMP_LOG_ROOT()) << "on_logger_conf_changed";
+					//新增
+					for (auto& i : new_value)
+					{
+						auto it = old_value.find(i);
+						Logger::ptr logger;
+						if (it == old_value.end())
+						{
+							//新增logger
+							logger.reset(new Logger(i.name));
+						}
+						else
+						{
+							if (!(i == *it))
+							{
+								//修改logger
+								//先删除原有的appender
+								logger = NILESTHUMP_LOG_GET_LOGGER(i.name);
+							}
+						}
+						logger->setLevel(i.level);
+						if (!i.formatter.empty())
+						{
+							logger->setFormatter(i.formatter);
+						}
+
+						logger->clearAppenders();
+						for (auto& a : i.appenders)
+						{
+							LogAppender::ptr appender;
+							if (a.type == 1)
+							{
+								appender.reset(new FileLogAppender(a.file));
+								appender->setLevel(a.level);
+								if (!a.formatter.empty())
+								{
+									appender->setFormatter(a.formatter);
+								}
+								logger->addAppender(appender);
+							}
+							else if (a.type == 2)
+							{
+								appender.reset(new StdoutLogAppender);
+							}
+							appender->setLevel(a.level);
+							logger->addAppender(appender);
+						}
+					}
+					//修改
+					//删除
+					for (auto& i : old_value)
+					{
+						auto it = new_value.find(i);
+						if (it == new_value.end())
+						{
+							//删除logger
+							auto logger = NILESTHUMP_LOG_GET_LOGGER(i.name);
+							logger->setLevel((LogLevel::Level)100);
+							logger->clearAppenders();
+						}
+						else
+						{
+							if (!(i == *it))
+							{
+								//修改logger
+								//先删除原有的appender
+							}
+						}
+					}
+				});
+		}
+	};
+
+	static LogIniter __log_init;
+
+	void LoggerManager::init()
+	{
+
 	}
 
 } // namespace GameProjectServer

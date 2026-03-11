@@ -1,4 +1,3 @@
-#define __NILESTHUMP_RETURN_ROOT__
 #include <iostream>
 #include "Util.h"
 #include "Log.h"

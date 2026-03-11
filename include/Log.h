@@ -30,10 +30,6 @@
 #define LOG_API
 #endif
 
-#ifdef __NILESTHUMP_RETURN_ROOT__
-#define NILESTHUMP_RETURN_ROOT
-#endif
-
 #define NILESTHUMP_LOG_LEVEL(logger, level) \
 	if(logger->getLevel() <= level) \
 		GameProjectServer::LogEventWrap(GameProjectServer::LogEvent::ptr(\
@@ -59,10 +55,12 @@
 #define NILESTHUMP_LOG_FMT_FATAL(logger, fmt, ...) NILESTHUMP_LOG_FMT_LEVEL(logger, GameProjectServer::LogLevel::FATAL, fmt, ##__VA_ARGS__)
 
 #define NILESTHUMP_LOG_ROOT() GameProjectServer::LoggerMgr::GetInstance()->getRoot()
+#define NILESTHUMP_LOG_GET_LOGGER(name) GameProjectServer::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace GameProjectServer
 {
 	class Logger;
+	class LoggerManager;
 
 	//日志级别
 	class LogLevel {
@@ -75,6 +73,7 @@ namespace GameProjectServer
 			ERROR = 4,
 			FATAL = 5
 		};
+		static Level FromString(const std::string& str);
 		static const char* ToString(Level level);
 	};
 
@@ -137,14 +136,17 @@ namespace GameProjectServer
 		public:
 			using ptr = std::shared_ptr<FormatItem>;
 			virtual ~FormatItem() {}
-			virtual void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
+			virtual void format(std::ostream& os, std::shared_ptr<Logger> logger,
+				LogLevel::Level level, LogEvent::ptr event) = 0;
 		};
 
-		void init();
+		void inline init();
+
+		bool isError() const { return m_error; }
 	private:
 		std::string m_pattern;                      //日志格式模板
 		std::vector<FormatItem::ptr> m_items; //日志格式化规则集合
-
+		bool m_error = false;                       //解析日志格式失败标志
 	};
 
 
@@ -166,7 +168,9 @@ namespace GameProjectServer
 	};
 
 	//日志器
-	class Logger :public std::enable_shared_from_this<Logger> {
+	class Logger :public std::enable_shared_from_this<Logger>
+	{
+		friend class LoggerManager;
 	public:
 		using ptr = std::shared_ptr<Logger>;
 
@@ -182,15 +186,22 @@ namespace GameProjectServer
 
 		void addAppender(LogAppender::ptr appender);
 		void delAppender(LogAppender::ptr appender);
+		void clearAppenders();
 		LogLevel::Level getLevel() const { return m_level; }
 		void setLevel(LogLevel::Level level) { m_level = level; }
 
 		const std::string& getName() const { return m_name; }
+
+		void setFormatter(LogFormatter::ptr formatter);
+		void setFormatter(const std::string& pattern);
+
+		LogFormatter::ptr getFormatter() const;
 	private:
 		std::string m_name;                        //日志器名称
 		LogLevel::Level m_level;                         //日志器级别
 		std::list<LogAppender::ptr> m_appenders; //日志输出地集合
 		LogFormatter::ptr m_formatter;       //日志格式器
+		Logger::ptr m_root;                         //根日志器
 	};
 
 	//输出到控制台的日志输出地
@@ -223,7 +234,7 @@ namespace GameProjectServer
 		LoggerManager();
 		Logger::ptr getLogger(const std::string& name);
 
-		void init() = delete;		//暂时弃用init函数，直接在构造函数中初始化根日志器
+		void init();
 		Logger::ptr getRoot() const { return m_root; }
 	private:
 		std::map<std::string, Logger::ptr> m_loggers; //日志器集合
