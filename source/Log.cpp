@@ -638,7 +638,7 @@ namespace GameProjectServer
 		{
 			g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value,
 				const std::set<LogDefine>& new_value) {
-					NILESTHUMP_LOG_GET_LOGGER(NILESTHUMP_LOG_ROOT()) << "on_logger_conf_changed";
+					NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "on_logger_conf_changed";
 					//新增
 					for (auto& i : new_value)
 					{
@@ -671,12 +671,6 @@ namespace GameProjectServer
 							if (a.type == 1)
 							{
 								appender.reset(new FileLogAppender(a.file));
-								appender->setLevel(a.level);
-								if (!a.formatter.empty())
-								{
-									appender->setFormatter(a.formatter);
-								}
-								logger->addAppender(appender);
 							}
 							else if (a.type == 2)
 							{
