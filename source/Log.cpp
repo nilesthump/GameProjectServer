@@ -9,6 +9,8 @@
 #include <functional>
 #include <ctime>
 #include <cstdio>
+#include <sstream>
+#include <yaml-cpp/yaml.h>
 
 namespace GameProjectServer
 {
@@ -177,11 +179,6 @@ namespace GameProjectServer
 		: m_name(name), m_level(LogLevel::DEBUG)
 	{
 		m_formatter.reset(new LogFormatter("%d{%H:%M:%S %Y-%m-%d}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n")); //默认格式
-	
-		if (name == "root")
-		{
-			m_appenders.push_back(std::make_shared<StdoutLogAppender>());
-		}
 	}
 
 	void Logger::setFormatter(LogFormatter::ptr formatter)
@@ -208,8 +205,10 @@ namespace GameProjectServer
 
 	LogLevel::Level LogLevel::FromString(const std::string& str) 
 	{
+		std::string upper_str = str;
+		transform(upper_str.begin(), upper_str.end(), upper_str.begin(), ::toupper);
 #define XX(level) \
-		if (str == #level) {\
+		if (upper_str == #level) {\
 			return LogLevel::level;\
 		}
 		XX(DEBUG)
@@ -335,12 +334,41 @@ namespace GameProjectServer
 		}
 	}
 
+	std::string FileLogAppender::toYamlString()
+	{
+		YAML::Node node;
+		node["type"] = "FileLogAppender";
+		node["file"] = m_filename;
+		node["level"] = LogLevel::ToString(m_level);
+		if (m_formatter) 
+		{
+			node["formatter"] = m_formatter->getPattern();
+		}
+		std::stringstream ss;
+		ss << node;
+		return ss.str();
+	}
+
 	void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
 	{
 		if (level >= m_level)
 		{
 			std::cout << m_formatter->format(logger, level, event);
 		}
+	}
+
+	std::string StdoutLogAppender::toYamlString()
+	{
+		YAML::Node node;
+		node["type"] = "StdoutLogAppender";
+		node["level"] = LogLevel::ToString(m_level);
+		if (m_formatter)
+		{
+			node["formatter"] = m_formatter->getPattern();
+		}
+		std::stringstream ss;
+		ss << node;
+		return ss.str();
 	}
 
 	LogFormatter::LogFormatter(const std::string& pattern)
@@ -514,9 +542,29 @@ namespace GameProjectServer
 	LoggerManager::LoggerManager()
 	{
 		m_root.reset(new Logger);
-		m_root->addAppender(std::make_shared<StdoutLogAppender>());
-		
+		m_root->addAppender(LogAppender::ptr(new StdoutLogAppender));
+
+		m_loggers[m_root->getName()] = m_root;
+
 		init();
+	}
+
+	std::string Logger::toYamlString()
+	{
+		YAML::Node node;
+		node["name"] = m_name;
+		node["level"] = LogLevel::ToString(m_level);
+		if (m_formatter)
+		{
+			node["formatter"] = m_formatter->getPattern();
+		}
+		for (auto& appender : m_appenders)
+		{
+			node["appenders"].push_back(YAML::Load(appender->toYamlString()));
+		}
+		std::stringstream ss;
+		ss << node;
+		return ss.str();
 	}
 
 	Logger::ptr LoggerManager::getLogger(const std::string& name)
@@ -629,6 +677,44 @@ namespace GameProjectServer
 		}
 	};
 
+	template<>
+	class LexicalCast<LogDefine, std::string>
+	{
+	public:
+		std::string operator()(const LogDefine& ld)
+		{
+			YAML::Node node;
+			node["name"] = ld.name;
+			node["level"] = LogLevel::ToString(ld.level);
+			if (!ld.formatter.empty())
+			{
+				node["formatter"] = ld.formatter;
+			}
+			for (auto& a : ld.appenders)
+			{
+				YAML::Node appender_node;
+				if (a.type == 1)
+				{
+					appender_node["type"] = "FileLogAppender";
+					appender_node["file"] = a.file;
+				}
+				else if (a.type == 2)
+				{
+					appender_node["type"] = "StdoutLogAppender";
+				}
+				appender_node["level"] = LogLevel::ToString(a.level);
+				if (!a.formatter.empty())
+				{
+					appender_node["formatter"] = a.formatter;
+				}
+				node["appenders"].push_back(appender_node);
+			}
+			std::stringstream ss;
+			ss << node;
+			return ss.str();
+		}
+	};
+
 	ConfigVar<std::set<LogDefine>>::ptr g_log_defines =
 		Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
@@ -647,7 +733,7 @@ namespace GameProjectServer
 						if (it == old_value.end())
 						{
 							//新增logger
-							logger.reset(new Logger(i.name));
+							logger = NILESTHUMP_LOG_GET_LOGGER(i.name);
 						}
 						else
 						{
@@ -706,6 +792,18 @@ namespace GameProjectServer
 	};
 
 	static LogIniter __log_init;
+
+	std::string LoggerManager::toYamlString()
+	{
+		YAML::Node node;
+		for (auto& i : m_loggers)
+		{
+			node.push_back(YAML::Load(i.second->toYamlString()));
+		}
+		std::stringstream ss;
+		ss << node;
+		return ss.str();
+	}
 
 	void LoggerManager::init()
 	{

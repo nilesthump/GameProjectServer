@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "Log.h"
 #include "yaml-cpp/yaml.h"
+#include <iostream>
 
 GameProjectServer::ConfigVar<int>::ptr g_int_value_config =
 GameProjectServer::Config::Lookup("system.port", (int)8080, "system port");
@@ -180,7 +181,7 @@ namespace GameProjectServer
 GameProjectServer::ConfigVar<Person>::ptr g_person_config =
 GameProjectServer::Config::Lookup("class.person", Person(), "system person");
 
-void test_class()
+static void inline test_class()
 {
 	NILESTHUMP_LOG_INFO(NILESTHUMP_LOG_ROOT()) << "before:" <<
 		g_person_config->getValue().toString() << " - " << g_person_config->toString();
@@ -192,9 +193,19 @@ void test_class()
 		g_person_config->getValue().toString() << " - " << g_person_config->toString();
 }
 
+void test_log()
+{
+	std::cout << GameProjectServer::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+	YAML::Node root = YAML::LoadFile("H:/GameProjectServer/bin/conf/test.yml");
+	GameProjectServer::Config::LoadFromYaml(root);
+	std::cout << "====================================" << std::endl;
+	std::cout << GameProjectServer::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+}
+
 int main(int argc, char** argv)
 {
-	test_class();
+	test_log();
+	//test_class();
 	//test_config();
 	//test_yaml();
 	return 0;

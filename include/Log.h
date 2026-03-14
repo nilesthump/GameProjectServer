@@ -140,9 +140,11 @@ namespace GameProjectServer
 				LogLevel::Level level, LogEvent::ptr event) = 0;
 		};
 
-		void inline init();
+		void init();
 
 		bool isError() const { return m_error; }
+
+		const std::string getPattern() const { return m_pattern; }
 	private:
 		std::string m_pattern;                      //日志格式模板
 		std::vector<FormatItem::ptr> m_items; //日志格式化规则集合
@@ -162,6 +164,8 @@ namespace GameProjectServer
 		LogLevel::Level getLevel() const { return m_level; }
 		void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
 		LogFormatter::ptr getFormatter() const { return m_formatter; }
+
+		virtual std::string toYamlString() = 0;
 	protected:
 		LogLevel::Level m_level;               //日志输出级别
 		LogFormatter::ptr m_formatter; //日志格式化器
@@ -196,12 +200,14 @@ namespace GameProjectServer
 		void setFormatter(const std::string& pattern);
 
 		LogFormatter::ptr getFormatter() const;
+
+		std::string toYamlString();
 	private:
 		std::string m_name;                        //日志器名称
 		LogLevel::Level m_level;                         //日志器级别
 		std::list<LogAppender::ptr> m_appenders; //日志输出地集合
 		LogFormatter::ptr m_formatter;       //日志格式器
-		Logger::ptr m_root;                         //根日志器
+		Logger::ptr m_root = nullptr;                         //根日志器
 	};
 
 	//输出到控制台的日志输出地
@@ -209,7 +215,7 @@ namespace GameProjectServer
 	public:
 		using ptr = std::shared_ptr<StdoutLogAppender>;
 		virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
-
+		std::string toYamlString() override;
 	private:
 
 	};
@@ -223,6 +229,8 @@ namespace GameProjectServer
 
 		//重新打开文件，文件打开失败返回false
 		bool reopen();
+
+		std::string toYamlString() override;
 	private:
 		std::string m_filename;    //日志文件名
 		std::ofstream m_filestream; //文件输出流
@@ -236,6 +244,8 @@ namespace GameProjectServer
 
 		void init();
 		Logger::ptr getRoot() const { return m_root; }
+
+		std::string toYamlString();
 	private:
 		std::map<std::string, Logger::ptr> m_loggers; //日志器集合
 		Logger::ptr m_root; //根日志器
