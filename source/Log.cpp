@@ -339,7 +339,10 @@ namespace GameProjectServer
 		YAML::Node node;
 		node["type"] = "FileLogAppender";
 		node["file"] = m_filename;
-		node["level"] = LogLevel::ToString(m_level);
+		if (m_level != LogLevel::UNKNOW)
+		{
+			node["level"] = LogLevel::ToString(m_level);
+		}
 		if (m_formatter) 
 		{
 			node["formatter"] = m_formatter->getPattern();
@@ -361,7 +364,10 @@ namespace GameProjectServer
 	{
 		YAML::Node node;
 		node["type"] = "StdoutLogAppender";
-		node["level"] = LogLevel::ToString(m_level);
+		if (m_level != LogLevel::UNKNOW)
+		{
+			node["level"] = LogLevel::ToString(m_level);
+		}
 		if (m_formatter)
 		{
 			node["formatter"] = m_formatter->getPattern();
@@ -553,7 +559,10 @@ namespace GameProjectServer
 	{
 		YAML::Node node;
 		node["name"] = m_name;
-		node["level"] = LogLevel::ToString(m_level);
+		if (m_level != LogLevel::UNKNOW)
+		{
+			node["level"] = LogLevel::ToString(m_level);
+		}
 		if (m_formatter)
 		{
 			node["formatter"] = m_formatter->getPattern();
@@ -669,7 +678,7 @@ namespace GameProjectServer
 						std::cout << "log appender config error: type is invalid" << std::endl;
 						continue;
 					}
-
+					lad.level = LogLevel::FromString(a["level"].IsDefined() ? a["level"].as<std::string>() : "");
 					ld.appenders.push_back(lad);
 				}
 			}
@@ -685,7 +694,10 @@ namespace GameProjectServer
 		{
 			YAML::Node node;
 			node["name"] = ld.name;
-			node["level"] = LogLevel::ToString(ld.level);
+			if (ld.level != LogLevel::UNKNOW)
+			{
+				node["level"] = LogLevel::ToString(ld.level);
+			}
 			if (!ld.formatter.empty())
 			{
 				node["formatter"] = ld.formatter;
@@ -702,7 +714,10 @@ namespace GameProjectServer
 				{
 					appender_node["type"] = "StdoutLogAppender";
 				}
-				appender_node["level"] = LogLevel::ToString(a.level);
+				if (a.level != LogLevel::UNKNOW)
+				{
+					appender_node["level"] = LogLevel::ToString(a.level);
+				}
 				if (!a.formatter.empty())
 				{
 					appender_node["formatter"] = a.formatter;
