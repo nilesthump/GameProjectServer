@@ -153,21 +153,26 @@ namespace GameProjectServer
 
 
 	//日志输出地
-	class LogAppender {
+	class LogAppender 
+	{
+		friend class Logger;
 	public:
 		using ptr = std::shared_ptr<LogAppender>;
 
+		LogAppender();
 		//虚析构函数，确保派生类正确析构
 		virtual ~LogAppender() {}
 		virtual void log(std::shared_ptr<Logger> logger,LogLevel::Level level, LogEvent::ptr event) = 0;
 		void setLevel(LogLevel::Level level) { m_level = level; }
 		LogLevel::Level getLevel() const { return m_level; }
-		void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
+
+		void setFormatter(LogFormatter::ptr formatter);
 		LogFormatter::ptr getFormatter() const { return m_formatter; }
 
 		virtual std::string toYamlString() = 0;
 	protected:
 		LogLevel::Level m_level;               //日志输出级别
+		bool m_hasFormatter;           //是否有自己的日志格式器
 		LogFormatter::ptr m_formatter; //日志格式化器
 	};
 
@@ -211,7 +216,9 @@ namespace GameProjectServer
 	};
 
 	//输出到控制台的日志输出地
-	class StdoutLogAppender : public LogAppender {
+	class StdoutLogAppender : public LogAppender 
+	{
+		friend class Logger;
 	public:
 		using ptr = std::shared_ptr<StdoutLogAppender>;
 		virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
@@ -221,7 +228,9 @@ namespace GameProjectServer
 	};
 
 	//输出到文件的日志输出地
-	class FileLogAppender : public LogAppender {
+	class FileLogAppender : public LogAppender 
+	{
+		friend class Logger;
 	public:
 		using ptr = std::shared_ptr<FileLogAppender>;
 		FileLogAppender(const std::string& filename);

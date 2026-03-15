@@ -195,11 +195,17 @@ static void inline test_class()
 
 void test_log()
 {
+	static GameProjectServer::Logger::ptr system_logger = NILESTHUMP_LOG_GET_LOGGER("system");
+	NILESTHUMP_LOG_DEBUG(system_logger) << "test log before config";
 	std::cout << GameProjectServer::LoggerMgr::GetInstance()->toYamlString() << std::endl;
 	YAML::Node root = YAML::LoadFile("H:/GameProjectServer/bin/conf/test.yml");
 	GameProjectServer::Config::LoadFromYaml(root);
 	std::cout << "====================================" << std::endl;
 	std::cout << GameProjectServer::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+	NILESTHUMP_LOG_DEBUG(system_logger) << "test macro debug";
+	system_logger->setFormatter("%d - %m%n");
+	NILESTHUMP_LOG_DEBUG(system_logger) << "test macro debug after fmt";
+
 }
 
 int main(int argc, char** argv)

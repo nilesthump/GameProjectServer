@@ -184,6 +184,14 @@ namespace GameProjectServer
 	void Logger::setFormatter(LogFormatter::ptr formatter)
 	{
 		m_formatter = formatter;
+
+		for (auto& i : m_appenders)
+		{
+			if (!i->m_hasFormatter)
+			{
+				i->m_formatter = m_formatter;
+			}
+		}
 	}
 
 	void Logger::setFormatter(const std::string& pattern)
@@ -195,7 +203,7 @@ namespace GameProjectServer
 				<< " value=" << pattern << " invalid formatter" << std::endl;
 			return;
 		}
-		m_formatter = new_formatter;
+		setFormatter(new_formatter);
 	}
 
 	LogFormatter::ptr Logger::getFormatter() const
@@ -295,7 +303,7 @@ namespace GameProjectServer
 	{
 		if (!appender->getFormatter())
 		{
-			appender->setFormatter(m_formatter);
+			appender->m_formatter = m_formatter;
 		}
 		m_appenders.push_back(appender);
 	}
@@ -308,6 +316,24 @@ namespace GameProjectServer
 	void Logger::clearAppenders()
 	{
 		m_appenders.clear();
+	}
+
+	LogAppender::LogAppender()
+		: m_level(LogLevel::DEBUG), m_hasFormatter(false)
+	{
+	}
+
+	void LogAppender::setFormatter(LogFormatter::ptr formatter)
+	{
+		m_formatter = formatter;
+		if (m_formatter)
+		{
+			m_hasFormatter = true;
+		}
+		else
+		{
+			m_hasFormatter = false;
+		}
 	}
 
 	FileLogAppender::FileLogAppender(const std::string& filename)
@@ -343,7 +369,7 @@ namespace GameProjectServer
 		{
 			node["level"] = LogLevel::ToString(m_level);
 		}
-		if (m_formatter) 
+		if (m_hasFormatter && m_formatter) 
 		{
 			node["formatter"] = m_formatter->getPattern();
 		}
@@ -368,7 +394,7 @@ namespace GameProjectServer
 		{
 			node["level"] = LogLevel::ToString(m_level);
 		}
-		if (m_formatter)
+		if (m_hasFormatter && m_formatter)
 		{
 			node["formatter"] = m_formatter->getPattern();
 		}
@@ -778,6 +804,19 @@ namespace GameProjectServer
 								appender.reset(new StdoutLogAppender);
 							}
 							appender->setLevel(a.level);
+							if (!a.formatter.empty())
+							{
+								LogFormatter::ptr fmt(new LogFormatter(a.formatter));
+								if (!fmt->isError())
+								{
+									appender->setFormatter(fmt);
+								}
+								else
+								{
+									std::cout << "log name = " << i.name << " appender type = " << a.type << 
+										" formatter = " << a.formatter << " is invalid" << std::endl;
+								}
+							}
 							logger->addAppender(appender);
 						}
 					}

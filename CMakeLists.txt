@@ -16,6 +16,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
+function(redefine_file_macro targetname)
+	get_target_property(source_files "${targetname}" SOURCES)
+	foreach(sourcefile ${source_files})
+		get_property(defs SOURCE "${sourcefile}"
+			PROPERTY COMPILE_DEFINITIONS)
+		get_filename_component(filepath "${sourcefile}" ABSOLUTE)
+		string(REPLACE ${PROJECT_SOURCE_DIR}/ "" relpath ${filepath})
+		list(APPEND def "__FILE__=\"${relpath}\"")
+		set_property(
+			SOURCE "${sourcefile}"
+			PROPERTY COMPILE_DEFINITIONS ${defs})
+	endforeach()
+endfunction()
+
 FetchContent_Declare(
   yaml-cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
@@ -37,8 +51,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # link_libraries(${LIB_PATH}/GameProjectServer)
 add_executable(test tests/test.cpp)
 target_link_libraries(test PUBLIC GameProjectServer)
+REDEFINE_FILE_MACRO(test)
 
 # link_libraries(${LIB_PATH}/GameProjectServer)
 add_executable(test_config tests/test_config.cpp)
 target_link_libraries(test_config PUBLIC GameProjectServer)
-
+REDEFINE_FILE_MACRO(test_config)
